@@ -13,8 +13,24 @@
 ### Integration Testing
 - **Framework**: Deno Test + SuperDeno
   - SuperDeno for HTTP assertions
-  - Testing CQRS flows end-to-end
+  - Testing CQRS/ES flows end-to-end
   - Database integration testing
+  - Event bus testing
+
+### E2E Testing
+- **Framework**: Playwright
+  - Cross-browser testing
+  - Strong TypeScript support
+  - Built-in debugging tools
+  - Mobile viewport testing
+  - Network interception
+
+### Property Testing
+- **Framework**: Fast-Check
+  - Property-based testing
+  - Excellent TypeScript support
+  - Integration with Effect TS
+  - Automatic test case generation
 
 ## Testing Approach
 
@@ -85,6 +101,7 @@ test("basic transaction flow", async ({ page }) => {
 ## Naming Conventions
 - Unit tests: `*.test.ts`
 - Integration tests: `*.integration.test.ts`
+- E2E tests: `*.spec.ts`
 - Test helpers: `*.helper.ts`
 
 ## Test Coverage
@@ -118,6 +135,7 @@ test("basic transaction flow", async ({ page }) => {
 
 ### Mocking Strategy
 - Mock external services in integration tests
+- Use real implementations in E2E tests
 - Prefer dependency injection for easier mocking
 - Document mock behaviors
 

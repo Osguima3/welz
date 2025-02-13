@@ -130,6 +130,7 @@ Set up the initial development environment and core infrastructure.
 - Set up Fresh framework
 - Configure TypeScript
 - Set up PostgreSQL database
+- Configure Redis instance
 - Set up Docker development environment
 
 **Acceptance Criteria**
@@ -169,23 +170,21 @@ Set up testing infrastructure for both frontend and backend.
 
 ---
 
-### **[WELZ-003][Backend] Implement core CQRS and Event Bus infrastructure**
+### **[WELZ-003][Backend] Implement core CQRS infrastructure**
 
 **Description**  
-Set up the base CQRS architecture with Effect TS implementation and in-memory event bus.
+Set up the base CQRS architecture with Effect TS implementation.
 
 **Details**
 - Implement command handling infrastructure
+- Set up event bus with Redis
 - Create base query infrastructure
 - Configure Effect TS patterns
-- Set up in-memory event bus with pub/sub
-- Configure event handlers
 
 **Acceptance Criteria**
 - Command handling works end-to-end
 - Events are properly published and consumed
 - Query infrastructure supports basic operations
-- Event bus handles module communication
 - Effect TS patterns are properly implemented
 
 **Effort:** L  
@@ -194,29 +193,51 @@ Set up the base CQRS architecture with Effect TS implementation and in-memory ev
 
 ---
 
-### **[WELZ-004][Backend] Create mock data structure and static entities**
+### **[WELZ-004][Backend] Set up authentication infrastructure**
 
 **Description**  
-Define and implement the data structure for mock financial data with two static entities (Cash and Bank).
+Implement basic authentication infrastructure without OAuth providers.
 
 **Details**
-- Design database schema for accounts and transactions
-- Create database migrations
-- Implement data seeding for static entities
-- Add mock transaction data
+- Set up session management
+- Implement token service
+- Create basic RBAC structure
+- Set up audit logging
 
 **Acceptance Criteria**
-- Database schema supports required data
-- Static entities are seeded on setup
-- Mock data matches real-world scenarios
+- Session management works
+- Tokens are properly generated and validated
+- Basic roles can be assigned
+- Security events are logged
 
-**Effort:** S  
+**Effort:** M  
 **Priority:** High  
-**Dependencies:** WELZ-003
+**Dependencies:** WELZ-001
 
 ---
 
-### **[WELZ-005][Frontend] Implement dashboard layout and components**
+### **[WELZ-005][Backend] Create mock data structure and API endpoints**
+
+**Description**  
+Define and implement the data structure and API endpoints for mock financial data.
+
+**Details**
+- Design database schema for accounts and transactions
+- Create REST API endpoints for fetching mock data
+- Implement data seeding mechanism
+
+**Acceptance Criteria**
+- Database schema supports required mock data
+- API endpoints return properly formatted JSON
+- Mock data matches real-world scenarios
+
+**Effort:** M  
+**Priority:** High  
+**Dependencies:** None  
+
+---
+
+### **[WELZ-006][Frontend] Implement dashboard layout and components**
 
 **Description**  
 Create the main dashboard layout and required components for displaying financial data.
@@ -233,38 +254,34 @@ Create the main dashboard layout and required components for displaying financia
 
 **Effort:** M  
 **Priority:** High  
-**Dependencies:** WELZ-004
+**Dependencies:** WELZ-005
 
 ---
 
-### **[WELZ-006][Backend] Implement Transaction API endpoints**
+### **[WELZ-007][Backend] Implement data normalization service**
 
 **Description**  
-Create comprehensive REST API endpoints for transactions with mock user session.
+Create service to normalize financial data from different sources.
 
 **Details**
-- Set up mock user session middleware
-- Implement read endpoints (list, get) with filtering/pagination
-- Implement write endpoints (create, update, delete)
-- Add input validation and error handling
-- Add response caching headers
-- Create API documentation
+- Define unified data model
+- Implement transformation logic
+- Create validation rules
+- Set up error handling
 
 **Acceptance Criteria**
-- All endpoints automatically use mock user context
-- CRUD operations work correctly with proper validation
-- Filtering and pagination work as expected
-- Response caching works correctly
-- Error responses are consistent
-- API documentation is available
+- Data model handles all required fields
+- Transformations work correctly
+- Validation catches edge cases
+- Errors are properly handled and logged
 
-**Effort:** L  
+**Effort:** M  
 **Priority:** High  
-**Dependencies:** WELZ-004
+**Dependencies:** WELZ-003
 
 ---
 
-### **[WELZ-007][Frontend] Create reusable UI component library**
+### **[WELZ-008][Frontend] Create reusable UI component library**
 
 **Description**  
 Develop core UI components needed across the application.
@@ -287,7 +304,28 @@ Develop core UI components needed across the application.
 
 ---
 
-### **[WELZ-008][Frontend] Create transaction management interface**
+### **[WELZ-009][Backend] Implement transaction CRUD endpoints**
+
+**Description**  
+Create API endpoints for basic transaction management.
+
+**Details**
+- Design transaction model
+- Implement CRUD operations
+- Add basic validation
+
+**Acceptance Criteria**
+- All CRUD operations work correctly
+- Input validation handles edge cases
+- Proper error responses
+
+**Effort:** S  
+**Priority:** High  
+**Dependencies:** WELZ-005
+
+---
+
+### **[WELZ-010][Frontend] Create transaction management interface**
 
 **Description**  
 Implement the user interface for transaction management.
@@ -304,11 +342,11 @@ Implement the user interface for transaction management.
 
 **Effort:** M  
 **Priority:** High  
-**Dependencies:** WELZ-006
+**Dependencies:** WELZ-009
 
 ---
 
-### **[WELZ-009][Backend] Implement basic analytics endpoints**
+### **[WELZ-011][Backend] Implement basic analytics endpoints**
 
 **Description**  
 Create endpoints for basic spending insights and statistics.
@@ -325,11 +363,11 @@ Create endpoints for basic spending insights and statistics.
 
 **Effort:** M  
 **Priority:** Mid  
-**Dependencies:** WELZ-006
+**Dependencies:** WELZ-009
 
 ---
 
-### **[WELZ-010][Frontend] Create insights dashboard**
+### **[WELZ-012][Frontend] Create insights dashboard**
 
 **Description**  
 Implement the visualization components for spending insights.
@@ -346,34 +384,57 @@ Implement the visualization components for spending insights.
 
 **Effort:** M  
 **Priority:** Mid  
-**Dependencies:** WELZ-009
+**Dependencies:** WELZ-011
 
 ---
 
-### **[WELZ-011][Backend] Implement basic insights endpoints**
+### **[WELZ-013][Backend] Implement event sourcing for transactions**
 
 **Description**  
-Create endpoints for basic financial insights and analytics.
+Set up event sourcing infrastructure for transaction management.
 
 **Details**
-- Net worth calculation endpoint
-- Monthly spending by category endpoint
-- Top spending categories endpoint
-- Basic trends endpoints
+- Implement event store
+- Create transaction events
+- Set up event handlers
+- Implement event replay capability
 
 **Acceptance Criteria**
-- Net worth is correctly calculated
-- Category breakdowns are accurate
-- Trend calculations work properly
+- Events are properly stored
+- Transaction history is maintained
+- Event replay works correctly
 - Performance is acceptable
 
-**Effort:** M  
-**Priority:** High  
-**Dependencies:** WELZ-006
+**Effort:** L  
+**Priority:** Mid  
+**Dependencies:** WELZ-003
 
 ---
 
-### **[WELZ-012][Testing] Create backend unit test suite**
+### **[WELZ-014][Backend] Create caching infrastructure**
+
+**Description**  
+Implement caching strategy for read models.
+
+**Details**
+- Set up Redis caching
+- Implement cache invalidation
+- Create cache warming strategy
+- Add monitoring
+
+**Acceptance Criteria**
+- Caching improves performance
+- Cache invalidation works correctly
+- Cache hit rate is monitored
+- Cache warming runs automatically
+
+**Effort:** M  
+**Priority:** Mid  
+**Dependencies:** WELZ-003, WELZ-013
+
+---
+
+### **[WELZ-015][Testing] Create backend unit test suite**
 
 **Description**  
 Implement comprehensive unit tests for backend services.
@@ -396,7 +457,7 @@ Implement comprehensive unit tests for backend services.
 
 ---
 
-### **[WELZ-013][Testing] Create frontend unit test suite**
+### **[WELZ-016][Testing] Create frontend unit test suite**
 
 **Description**  
 Implement unit tests for frontend components and services.
@@ -415,71 +476,47 @@ Implement unit tests for frontend components and services.
 
 **Effort:** M  
 **Priority:** High  
-**Dependencies:** WELZ-002, WELZ-007
+**Dependencies:** WELZ-002, WELZ-008
 
 ---
 
-### **[WELZ-014][Testing] Implement E2E test suite**
+### **[WELZ-017][Testing] Implement E2E test suite**
 
 **Description**  
-Implement end-to-end tests for the application.
+Create end-to-end tests for critical user journeys.
 
 **Details**
-- Set up E2E test structure
-- Write tests for core user flows
-- Implement test automation
-- Integrate with CI pipeline
+- Set up Playwright configuration
+- Create test data seeding
+- Implement page objects
+- Write core user journey tests
 
 **Acceptance Criteria**
-- Core user flows are covered
-- Tests run in CI pipeline
-- Test results are reported
+- Critical paths are covered
+- Tests are stable and reliable
+- Test data is properly managed
+- Tests run in under 5 minutes
 
 **Effort:** L  
 **Priority:** High  
-**Dependencies:** WELZ-002, WELZ-005, WELZ-008
-
----
-
-### **[WELZ-015][Documentation] Create OpenAPI documentation**
-
-**Description**  
-Create comprehensive API documentation using OpenAPI/Swagger.
-
-**Details**
-- Document all endpoints
-- Include request/response examples
-- Add validation rules
-- Document error responses
-- Create Swagger UI setup
-
-**Acceptance Criteria**
-- OpenAPI spec is complete for all endpoints
-- Documentation is accessible via Swagger UI
-- All models are properly documented
-- Error responses are documented
-- Examples are provided for each endpoint
-
-**Effort:** S  
-**Priority:** High  
-**Dependencies:** WELZ-006
+**Dependencies:** WELZ-002, WELZ-006, WELZ-010
 
 ## Ticket Prioritization
 
-| Ticket   | Name | Type | Effort | Priority | Dependencies |
-|----------|------|------|---------|-----------|--------------|
-| WELZ-001 | Set up core development environment | Infrastructure | M | High | None |
-| WELZ-002 | Set up testing infrastructure | Infrastructure | M | High | WELZ-001 |
-| WELZ-003 | Implement core CQRS infrastructure | Backend | L | High | WELZ-001 |
-| WELZ-012 | Create backend unit test suite | Testing | M | High | WELZ-002, WELZ-003 |
-| WELZ-004 | Create mock data structure and static entities | Backend | S | High | WELZ-003 |
-| WELZ-007 | Create reusable UI component library | Frontend | M | High | None |
-| WELZ-013 | Create frontend unit test suite | Testing | M | High | WELZ-002, WELZ-007 |
-| WELZ-005 | Implement dashboard layout and components | Frontend | M | High | WELZ-004 |
-| WELZ-006 | Implement Transaction API endpoints | Backend | L | High | WELZ-004 |
-| WELZ-008 | Create transaction management interface | Frontend | M | High | WELZ-006 |
-| WELZ-014 | Implement E2E test suite | Testing | L | High | WELZ-002, WELZ-005, WELZ-008 |
-| WELZ-009 | Implement basic analytics endpoints | Backend | M | Mid | WELZ-006 |
-| WELZ-010 | Create insights dashboard | Frontend | M | Mid | WELZ-009 |
-| WELZ-011 | Implement basic insights endpoints | Backend | M | High | WELZ-006 |
-| WELZ-015 | Create OpenAPI documentation | Documentation | S | High | WELZ-006 |
+| Ticket | Name | Type | Effort | Priority | Dependencies | Score* |
+|--------|------|------|---------|-----------|--------------|--------|
+| [WELZ-001](#welz-001-infrastructure-set-up-core-development-environment) | Set up core development environment | Infrastructure | M | High | None | 100 |
+| [WELZ-002](#welz-002-infrastructure-set-up-testing-infrastructure) | Set up testing infrastructure | Infrastructure | M | High | WELZ-001 | 95 |
+| [WELZ-003](#welz-003-backend-implement-core-cqrs-infrastructure) | Implement core CQRS infrastructure | Backend | L | High | WELZ-001 | 90 |
+| [WELZ-015](#welz-015-testing-create-backend-unit-test-suite) | Create backend unit test suite | Testing | M | High | WELZ-002, WELZ-003 | 85 |
+| [WELZ-005](#welz-005-backend-create-mock-data-structure-and-api-endpoints) | Create mock data structure and API endpoints | Backend | M | High | None | 80 |
+| [WELZ-008](#welz-008-frontend-create-reusable-ui-component-library) | Create reusable UI component library | Frontend | M | High | None | 75 |
+| [WELZ-016](#welz-016-testing-create-frontend-unit-test-suite) | Create frontend unit test suite | Testing | M | High | WELZ-002, WELZ-008 | 70 |
+| [WELZ-006](#welz-006-frontend-implement-dashboard-layout-and-components) | Implement dashboard layout and components | Frontend | M | High | WELZ-005 | 65 |
+| [WELZ-009](#welz-009-backend-implement-transaction-crud-endpoints) | Implement transaction CRUD endpoints | Backend | S | High | WELZ-005 | 60 |
+| [WELZ-010](#welz-010-frontend-create-transaction-management-interface) | Create transaction management interface | Frontend | M | High | WELZ-009 | 55 |
+| [WELZ-017](#welz-017-testing-implement-e2e-test-suite) | Implement E2E test suite | Testing | L | High | WELZ-002, WELZ-006, WELZ-010 | 50 |
+| [WELZ-011](#welz-011-backend-implement-basic-analytics-endpoints) | Implement basic analytics endpoints | Backend | M | Mid | WELZ-009 | 45 |
+| [WELZ-012](#welz-012-frontend-create-insights-dashboard) | Create insights dashboard | Frontend | M | Mid | WELZ-011 | 40 |
+| [WELZ-013](#welz-013-backend-implement-event-sourcing-for-transactions) | Implement event sourcing for transactions | Backend | L | Mid | WELZ-003 | 35 |
+| [WELZ-014](#welz-014-backend-create-caching-infrastructure) | Create caching infrastructure | Backend | M | Mid | WELZ-003, WELZ-013 | 30 |

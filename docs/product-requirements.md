@@ -14,15 +14,19 @@ Empower users to master their finances by bridging the gap between digital accou
 
 ### **Core Value Proposition**  
 * **Comprehensive Financial Picture**  
-   - **Unified Aggregation**: Seamlessly integrates bank accounts, credit cards, investments, **cash accounts**, and debts into a single dashboard.
-   - **Physical + Digital**: Track cash transactions alongside digital spending for a complete financial snapshot.
+   - **Unified Aggregation**: Seamlessly integrates bank accounts, credit cards, investments, **cash accounts**, and debts into a single dashboard.  
+   - **Physical + Digital**: Track cash transactions alongside digital spending for a complete financial snapshot.  
 
 * **Intelligent Automation**  
-   - **AI-Driven Insights**: Automatically categorizes transactions, forecasts trends, and flags anomalies.
-   - **Net Worth Dynamics**: Real-time calculation of assets vs. liabilities.
+   - **AI-Driven Insights**: Automatically categorizes transactions, forecasts trends, and flags anomalies.  
+   - **Net Worth Dynamics**: Real-time calculation of assets (liquid funds, investments, cash) vs. liabilities (loans, credit).  
+
+* **Collaborative Finance**  
+   - **Shared Budgets**: Households or groups can manage joint expenses with role-based permissions.  
+   - **Multi-Currency Support**: Convert and track balances across currencies in a unified view.  
 
 * **Regulatory Compliance**  
-   - GDPR-compliant architecture with end-to-end encryption.
+   - GDPR and PSD2-compliant architecture with end-to-end encryption and Open Banking integrations.  
 
 ---
 
@@ -42,16 +46,16 @@ Empower users to master their finances by bridging the gap between digital accou
 
 ### **Key Differentiators**  
 * **Hybrid Account Management**  
-   - **Unique Support for Cash**: Log physical transactions with basic details.
+   - **Unique Support for Cash**: Log physical transactions with notes or photos. Sync cash balances with digital accounts for true net worth accuracy.
 
 * **Proactive Financial Guardrails**  
-   - Manual budget tracking and basic category analysis.
+   - AI predicts overspending risks and suggests adjustments (e.g., “Reduce dining out by 20% to stay within budget”).
 
 * **Household-Centric Design**  
-   - Basic personal finance tracking.
+   - Create shared financial goals (e.g., vacations, mortgages) with contribution tracking and progress visualizations.
 
 * **Open Ecosystem**  
-   - Standard data export capabilities.
+   - APIs for third-party integrations (e.g., tax software, accounting tools) and future SMB modules (e.g., invoicing).
 
 ---
 
@@ -74,7 +78,6 @@ Empower users to master their finances by bridging the gap between digital accou
 ## **Use Cases**  
 
 ### **Use Case 1: Categorize New Transactions**  
-
 **Description**:  
 Automatically categorizes new transactions from **manual cash entries** or **synced financial accounts** using AI suggestions, allowing users to refine labels.  
 
@@ -93,10 +96,13 @@ Automatically categorizes new transactions from **manual cash entries** or **syn
 ```plantuml
 @startuml
 [New Transaction] --> [Source]
-[Source] --> [Manual Cash Entry]
-[Manual Cash Entry] --> [User Review]
-[User Review] --> [Save Categorized Transaction]
-[User Review] --> [User Edits Category]
+[Source] --> [User Inputs Amount, Date, Notes] : Manual Cash Entry
+[Source] --> [Aggregator Imports Data] : Synced Account
+[User Inputs Amount, Date, Notes] --> [AI Suggests Category]
+[Aggregator Imports Data] --> [AI Suggests Category]
+[AI Suggests Category] --> [User Review]
+[User Review] --> [Save Categorized Transaction] : Accept
+[User Review] --> [User Edits Category] : Reject
 [User Edits Category] --> [Save Categorized Transaction]
 [Save Categorized Transaction] --> [Update Net Worth & Category Analytics]
 @enduml
@@ -105,9 +111,8 @@ Automatically categorizes new transactions from **manual cash entries** or **syn
 ---
 
 ### **Use Case 2: View Financial Insights Dashboard**  
-
 **Description**:  
-Displays real-time net worth and monthly income/expenses.
+Displays real-time net worth, monthly income/expenses, stock portfolio performance, and AI-predicted end-of-month (EOM) financial status.  
 
 **Flow**:  
 1. **Fetch Data**:  
@@ -128,15 +133,19 @@ Displays real-time net worth and monthly income/expenses.
 [User Opens Dashboard] --> [Fetch Balances & Transactions]
 [Fetch Balances & Transactions] --> [Calculate Net Worth]
 [Fetch Balances & Transactions] --> [Sum Monthly Expenses/Income]
-[Calculate Net Worth] --> [Display Dashboard with Charts]
-[Sum Monthly Expenses/Income] --> [Display Dashboard with Charts]
+[Fetch Balances & Transactions] --> [Compute Portfolio Change]
+[Fetch Balances & Transactions] --> [Predict EOM Net Worth]
+[Calculate Net Worth] --> [Display Dashboard with Charts/Alerts]
+[Sum Monthly Expenses/Income] --> [Display Dashboard with Charts/Alerts]
+[Compute Portfolio Change] --> [Display Dashboard with Charts/Alerts]
+[Predict EOM Net Worth] --> [Display Dashboard with Charts/Alerts]
+[Display Dashboard with Charts/Alerts] --> [Drill Down: Adjust Forecast Assumptions]
 @enduml
 ```  
 
 ---
 
 ### **Use Case 3: Analyze Per-Category Expenses & Income**  
-
 **Description**:  
 Drill down into specific categories (e.g., "Groceries", "Salary") to analyze spending patterns and income sources.  
 
@@ -145,12 +154,18 @@ Drill down into specific categories (e.g., "Groceries", "Salary") to analyze spe
 2. **Fetch Transactions**: Retrieves all transactions in the selected category.  
 3. **Display Analytics**:  
    - **Trends**: Weekly/monthly spending/income.  
+   - **Top Merchants**: Most frequent payees (e.g., "Lidl" for Groceries).  
+   - **Budget Comparison**: Placeholder for future budget integration.  
 
 **Diagram**:  
 ```plantuml
 @startuml
 [User Selects Category] --> [Fetch Transactions in Category]
 [Fetch Transactions in Category] --> [Calculate Trends: Weekly/Monthly]
+[Fetch Transactions in Category] --> [Identify Top Merchants]
+[Fetch Transactions in Category] --> [Compare vs. Budget]
 [Calculate Trends: Weekly/Monthly] --> [Display Category Breakdown]
+[Identify Top Merchants] --> [Display Category Breakdown]
+[Compare vs. Budget] --> [Display Category Breakdown]
 @enduml
 ```

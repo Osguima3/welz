@@ -10,7 +10,7 @@
 - [Value Objects](#value-objects)
 
 ## Overview
-This document provides a comprehensive view of our domain model following DDD principles and CQRS patterns, including:
+This document provides a comprehensive view of our domain model following DDD principles and CQRS/ES patterns, including:
 - Aggregates and their behaviors
 - Commands that can be executed
 - Events that can be emitted
@@ -20,11 +20,80 @@ This document provides a comprehensive view of our domain model following DDD pr
 
 ## Aggregates
 
+### User Aggregate
+- **Root**: `User`
+- **Value Objects**: `Email`, `Name`
+- **Commands**:
+  ```typescript
+  interface CreateUserCommand {
+    email: string;
+    firstName: string;
+    lastName: string;
+  }
+  ```
+- **Events**:
+  - `UserCreated`
+  - `UserProfileAdded`
+  - `UserProfileShared`
+
+### Profile Aggregate
+- **Root**: `Profile`
+- **Value Objects**: `ProfileSettings`
+- **Commands**:
+  ```typescript
+  interface CreateProfileCommand {
+    name: string;
+    ownerId: string;
+    settings?: ProfileSettings;
+  }
+  
+  interface UpdateProfileCommand {
+    profileId: string;
+    name?: string;
+    settings?: Partial<ProfileSettings>;
+  }
+  ```
+- **Events**:
+  - `ProfileCreated`
+  - `ProfileUpdated`
+  - `ProfileShared`
+  - `ProfileUnshared`
+
+### Entity Aggregate
+- **Root**: `FinancialEntity`
+- **Value Objects**: `EntityCredentials`
+- **Commands**:
+  ```typescript
+  interface ConnectEntityCommand {
+    profileId: string;
+    provider: string;
+    credentials: EntityCredentials;
+  }
+  
+  interface DisconnectEntityCommand {
+    entityId: string;
+    reason?: string;
+  }
+  ```
+- **Events**:
+  - `EntityConnected`
+  - `EntityDisconnected`
+  - `EntitySyncRequested`
+  - `EntitySyncCompleted`
+
 ### Account Aggregate
 - **Root**: `Account`
 - **Value Objects**: `Money`, `Currency`
 - **Commands**:
   ```typescript
+  interface CreateAccountCommand {
+    entityId: string;
+    name: string;
+    type: AccountType;
+    currency: string;
+    initialBalance?: Money;
+  }
+  
   interface UpdateBalanceCommand {
     accountId: string;
     newBalance: Money;
@@ -32,7 +101,9 @@ This document provides a comprehensive view of our domain model following DDD pr
   }
   ```
 - **Events**:
+  - `AccountCreated`
   - `AccountBalanceUpdated`
+  - `AccountClosed`
 
 ### Transaction Aggregate
 - **Root**: `Transaction`
@@ -51,6 +122,7 @@ This document provides a comprehensive view of our domain model following DDD pr
   interface CategorizeTransactionCommand {
     transactionId: string;
     categoryId: string;
+    isAutomatic: boolean;
   }
   ```
 - **Events**:
@@ -74,13 +146,40 @@ This document provides a comprehensive view of our domain model following DDD pr
   - `CategoryUpdated`
 
 ## Commands
+
+### User Commands
 ```typescript
-interface UpdateBalanceCommand {
-  accountId: string;
-  newBalance: Money;
-  asOf: Date;
+interface CreateUserCommand {
+  email: string;
+  firstName: string;
+  lastName: string;
 }
 
+interface ShareProfileCommand {
+  profileId: string;
+  userId: string;
+  role: 'VIEWER' | 'EDITOR';
+}
+```
+
+### Account Commands
+```typescript
+interface ConnectEntityCommand {
+  profileId: string;
+  provider: string;
+  credentials: EntityCredentials;
+}
+
+interface CreateManualAccountCommand {
+  entityId: string;
+  name: string;
+  currency: string;
+  initialBalance: Money;
+}
+```
+
+### Transaction Commands
+```typescript
 interface CreateTransactionCommand {
   accountId: string;
   amount: Money;
@@ -92,10 +191,52 @@ interface CreateTransactionCommand {
 interface CategorizeTransactionCommand {
   transactionId: string;
   categoryId: string;
+  isAutomatic: boolean;
 }
 ```
 
 ## Events
+
+### AccountConnected
+- **Publisher**: Command Module
+- **Subscribers**: Query Module, Data Aggregation Module
+- **Description**: Emitted when a user successfully connects a new bank account or investment account to their profile
+- **Payload**:
+  ```json
+  {
+    "userId": "string",
+    "provider": "string",
+    "accountId": "string",
+    "timestamp": "string"
+  }
+  ```
+
+### DataSyncStarted
+- **Publisher**: Data Aggregation Module
+- **Subscribers**: Query Module
+- **Description**: Emitted when the system begins synchronizing data from a connected financial institution
+- **Payload**:
+  ```json
+  {
+    "userId": "string",
+    "provider": "string",
+    "timestamp": "string"
+  }
+  ```
+
+### DataSyncCompleted
+- **Publisher**: Data Aggregation Module
+- **Subscribers**: Query Module, Financial Insights Module
+- **Description**: Emitted when data synchronization finishes successfully, including the count of new transactions found
+- **Payload**:
+  ```json
+  {
+    "userId": "string",
+    "provider": "string",
+    "newTransactionCount": "number",
+    "timestamp": "string"
+  }
+  ```
 
 ### TransactionCreated
 - **Publisher**: Command Module
@@ -156,10 +297,22 @@ interface CategorizeTransactionCommand {
 
 ## Queries
 
+### User Queries
+```typescript
+interface GetUserProfilesQuery {
+  userId: string;
+}
+
+interface GetSharedProfilesQuery {
+  userId: string;
+}
+```
+
 ### Account Queries
 ```typescript
 interface GetAccountBalancesQuery {
-  currency?: string;
+  profileId: string;
+  currency?: string;  // For conversion
 }
 
 interface GetAccountTransactionsQuery {
@@ -174,16 +327,32 @@ interface GetAccountTransactionsQuery {
 ### Analytics Queries
 ```typescript
 interface GetNetWorthHistoryQuery {
+  profileId: string;
   timeframe: 'week' | 'month' | 'year';
 }
 
 interface GetCategorySpendingQuery {
+  profileId: string;
   dateRange: DateRange;
   groupBy: 'day' | 'week' | 'month';
 }
 ```
 
 ## Read Models
+
+### UserProfileReadModel
+```typescript
+interface UserProfileReadModel {
+  userId: string;
+  email: string;
+  name: string;
+  profiles: {
+    profileId: string;
+    name: string;
+    role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  }[];
+}
+```
 
 ### AccountReadModel
 ```typescript
@@ -259,6 +428,41 @@ interface TransactionMetadata {
   description: string;
   merchantName?: string;
   reference?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
+}
+```
+
+### EntityCredentials
+```typescript
+interface EntityCredentials {
+  type: 'OAUTH' | 'API_KEY';
+  data: {
+    accessToken?: string;
+    refreshToken?: string;
+    apiKey?: string;
+    expires?: Date;
+  };
+  metadata: Record<string, unknown>;
+}
+```
+
+### ProfileSettings
+```typescript
+interface ProfileSettings {
+  defaultCurrency: string;
+  budgetPeriod: 'MONTH' | 'WEEK';
+  notifications: {
+    budgetAlerts: boolean;
+    syncAlerts: boolean;
+    balanceAlerts: boolean;
+  };
+  sharing: {
+    allowViewers: boolean;
+    allowEditors: boolean;
+  };
 }
 ```
 
@@ -272,4 +476,5 @@ interface DateRange {
   overlaps(other: DateRange): boolean;
   duration(): Duration;
 }
+```
 
