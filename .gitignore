@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Deno cache directory (if you use one)
+.deno/
+
+# Deno generated files
+deno.lock
+
+# VS Code settings
+.vscode/
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Build output
+build/
+dist/
+out/
+
+# Environment variables
+*.env
+
+# System files (Windows)
+Thumbs.db
+Desktop.ini

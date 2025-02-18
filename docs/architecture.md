@@ -1,6 +1,7 @@
 # Architecture
 
 ## Table of Contents
+
 - [Technical Stack](#technical-stack)
   - [Frontend](#frontend)
   - [Backend](#backend)
@@ -31,20 +32,22 @@
 ## Technical Stack
 
 ### Frontend
-- **Web Client**: 
+
+- **Web Client**:
   - Framework: Deno Fresh (Islands Architecture)
   - Language: TypeScript
   - State Management: Effect TS
   - UI Components: Preact with Tailwind CSS
 
 ### Backend
+
 - **Runtime**: Deno
 - **Framework**: Fresh for backend APIs
-- **Core Libraries**: 
+- **Core Libraries**:
   - Effect TS for functional programming and error handling
   - Preact for UI components
   - Tailwind for styling
-- **Database**: 
+- **Database**:
   - PostgreSQL with Effect TS query builders
   - Nessie for database migrations
 
@@ -53,16 +56,18 @@
 ### Domain-Driven Design (DDD)
 
 #### Strategic Design
+
 - **Bounded Contexts**:
   - Financial Accounts
   - Transactions & Categorization
   - Analytics & Insights
 
 #### Tactical Design
+
 - **Aggregates**:
   - Account (root) → Transactions
   - Category (root) → Transaction Categories
-  
+
 - **Value Objects**:
   - Money (amount + currency)
   - DateRange
@@ -80,6 +85,7 @@
   - CategoryRepository
 
 ### CQRS Implementation
+
 The system implements a simplified CQRS pattern to achieve:
 
 - Clear separation between write and read operations
@@ -89,6 +95,7 @@ The system implements a simplified CQRS pattern to achieve:
 - Simple in-memory event bus for module communication
 
 #### Event Bus Implementation
+
 - In-memory pub/sub pattern using Effect TS
 - Simple topic-based subscription model
 - Synchronous event processing
@@ -96,12 +103,14 @@ The system implements a simplified CQRS pattern to achieve:
 - Module-to-module communication only
 
 #### Command Handling
+
 - Commands represent user intentions
 - Validation before execution
 - Direct persistence to PostgreSQL
 - Success/failure responses
 
 #### Query Handling
+
 - Materialized views for optimized reading
 - Views are refreshed on relevant domain events
 - Built-in PostgreSQL query optimization
@@ -110,25 +119,30 @@ The system implements a simplified CQRS pattern to achieve:
 ### SOLID Principles
 
 #### Single Responsibility Principle (SRP)
+
 - Each module has one reason to change
 - Clear separation between command and query responsibilities
 - Dedicated services for specific domain operations
 
 #### Open/Closed Principle (OCP)
+
 - Extensible command/query handlers
 - Plugin-based provider architecture for financial institutions
 - Category rules system supports custom rules
 
 #### Liskov Substitution Principle (LSP)
+
 - Abstract financial provider interfaces
 - Interchangeable storage implementations
 
 #### Interface Segregation Principle (ISP)
+
 - Specific command/query interfaces
 - Targeted repository interfaces
 - Granular service contracts
 
 #### Dependency Inversion Principle (DIP)
+
 - Core domain logic depends on abstractions
 - Infrastructure implementations injected at runtime
 - Effect TS for functional dependencies
@@ -136,12 +150,14 @@ The system implements a simplified CQRS pattern to achieve:
 ### DRY (Don't Repeat Yourself)
 
 #### Code Reuse Strategy
+
 - Shared domain models across bounded contexts
 - Common validation rules
 - Reusable UI components
 - Shared test utilities
 
 #### Infrastructure Patterns
+
 - Generic repository implementations
 - Common error handling
 - Unified logging approach
@@ -150,12 +166,14 @@ The system implements a simplified CQRS pattern to achieve:
 ### Clean Code Principles
 
 #### Naming Conventions
+
 - **Intention-Revealing Names**
   - Commands: `CreateTransactionCommand`, `UpdateBudgetCommand`
   - Queries: `GetTransactionsByDateQuery`, `GetNetWorthQuery`
   - Services: `TransactionNormalizationService`, `CategoryPredictionService`
 
 #### Function Design
+
 - **Small and Focused**
   - Each function does one thing
   - Maximum 20 lines per function
@@ -163,6 +181,7 @@ The system implements a simplified CQRS pattern to achieve:
   - Early returns for validation
 
 #### Code Organization
+
 - **Consistent File Structure**
   - Separate commands and queries
   - Group related domain logic
@@ -170,6 +189,7 @@ The system implements a simplified CQRS pattern to achieve:
   - Clear dependency hierarchy
 
 #### Error Handling
+
 - **Functional Error Management**
   - Effect TS for error handling
   - Clear error hierarchies
@@ -177,6 +197,7 @@ The system implements a simplified CQRS pattern to achieve:
   - Proper error logging
 
 #### Testing Approach
+
 - **Test-First Development**
   - Unit tests for business logic
   - Integration tests for workflows
@@ -184,6 +205,7 @@ The system implements a simplified CQRS pattern to achieve:
   - Clear test naming and structure
 
 #### Comments and Documentation
+
 - **Self-Documenting Code**
   - Clear function and variable names
   - Documented public APIs
@@ -193,16 +215,20 @@ The system implements a simplified CQRS pattern to achieve:
 ## High-Level Design
 
 ### System Overview
+
 The **Welz** platform consists of:
+
 1. **Frontend Application** – A web-based client using Fresh/Preact
 2. **Backend System** – A monolithic service handling data management, categorization, and basic insights
 
 ### Core Components & Interactions
 
 #### Frontend Application
+
 - **Web Client**: Responsive web application built with Fresh
 
 #### Backend Core Components
+
 - **API Gateway**: Entry point for all client requests
 - **Command Module**: Handles write operations
 - **Query Module**: Handles read operations
@@ -215,6 +241,7 @@ The **Welz** platform consists of:
 The infrastructure is designed to support both local development and future cloud deployment:
 
 ### CI/CD Pipeline
+
 - **GitHub Actions** for continuous integration:
   - Runs tests (unit, integration)
   - Checks code formatting
@@ -222,22 +249,25 @@ The infrastructure is designed to support both local development and future clou
   - Runs security scans
 
 ### Development Environment
+
 - **Docker Compose** setup with PostgreSQL container
 
 ### Monitoring & Logging
+
 - Basic logging with correlation IDs
 - Error tracking
 
 ## Deployment Model
 
 ### Local Development
+
 1. **Docker Compose** setup for local development
    ```yaml
    services:
      app:
        build: .
        ports:
-         - "8000:8000"
+         - '8000:8000'
        volumes:
          - .:/app
      db:
@@ -251,6 +281,7 @@ The infrastructure is designed to support both local development and future clou
    - Database migrations run automatically
 
 ### Production Deployment
+
 1. **Containerization**
    - Single Docker image for backend
    - Environment-specific configurations
@@ -263,21 +294,25 @@ The infrastructure is designed to support both local development and future clou
 ## Security Considerations
 
 ### Data Protection
+
 - **Encryption**
   - Data at rest encryption for databases
   - TLS 1.3 for all communications
 
 ### Authentication & Authorization
+
 - **Session Management**
   - Basic session handling
   - Simple JWT tokens
 
 ### Audit & Compliance
+
 - **Logging**
   - Security event logging
   - Access logs
 
 ### Financial Data Security
+
 - **PSD2 Requirements**
   - Basic authentication
   - HTTPS encryption
@@ -285,6 +320,7 @@ The infrastructure is designed to support both local development and future clou
 ## C4 diagrams
 
 ### Context Diagram
+
 ```plantuml
 @startuml
 package "Welz Platform" {
@@ -300,6 +336,7 @@ User --> [Web Client] : Uses
 ```
 
 ### Container Diagram
+
 ```plantuml
 @startuml
 actor "User"
@@ -336,6 +373,7 @@ User --> [Web Client]
 ```
 
 **API Gateway**
+
 - Single entry point for all API requests
 - Handles request routing, validation, and authentication
 - Manages API versioning and documentation
@@ -343,28 +381,33 @@ User --> [Web Client]
 - Routes requests to Command or Query modules based on operation type
 
 **Command Module**
+
 - Processes write commands from external and internal sources
 - Enforce domain rules and maintain data consistency
 - Directly persists changes to PostgreSQL
 - Handle idempotency and retries
 
 **Query Module**
+
 - Handles all read operations
 - Implements caching strategies
 - Uses read replicas for better performance
 - Subscribes to relevant events to invalidate caches
 
 **Categorization Module**
+
 - Automatically categorizes transactions based on past behavior
 - Allows users to change transaction categories providing reinforcement to categorization accuracy
 - Stores categorized transactions in the Database
 
 **Financial Insights Module**
+
 - Computes real-time net worth based on assets and liabilities
 - Generates financial reports
 - Stores financial metrics in the Database
 
 **Database**
+
 - PostgreSQL for relational data storage
 - Ensures efficient and structured data access
 
@@ -375,12 +418,14 @@ User --> [Web Client]
 The API Gateway Module serves as the unified entry point for all external requests, with client-specific response transformation for web and mobile clients.
 
 #### Core Responsibilities:
+
 - Process all incoming requests
 - Route requests to Command or Query modules
 - Provide unified error handling and logging
 - Monitor API health and metrics
 
 #### Component Diagram:
+
 ```plantuml
 @startuml
 [Web Client]
@@ -413,6 +458,7 @@ package "Backend Modules" {
 #### **Component Details:**
 
 **Request Handler**
+
 - Unified entry point for all HTTP requests
 - Client type detection and routing
 - Request lifecycle management
@@ -420,16 +466,19 @@ package "Backend Modules" {
 - Response transformer selection
 
 **Route Resolver**
+
 - Command/Query operation routing
 - Unified timeout policies
 - Core business logic routing
 
 **Web Transformer**
+
 - Web-specific response formats
 - Desktop browser optimizations
 - Web-specific caching strategies
 
-**API Documentation**  
+**API Documentation**
+
 - Complete OpenAPI endpoint documentation
 - Request/response schemas
 - Example payloads
@@ -441,12 +490,14 @@ package "Backend Modules" {
 The Command Module handles all write operations in the system, serving as the single entry point for both API and internal commands from domain modules.
 
 #### **Core Responsibilities:**
+
 - Process write commands from external and internal sources
 - Enforce domain rules and maintain data consistency
 - Persist changes to PostgreSQL
 - Handle idempotency and retries
 
 #### **Component Diagram:**
+
 ```plantuml
 @startuml
 package "Command Module" {
@@ -473,12 +524,14 @@ package "Command Module" {
 #### Component Details:
 
 **Command Handler**
+
 - Processes incoming commands
 - Orchestrates validation and execution
 - Returns command results
 - Handles errors and rollbacks
 
 **Command Validator**
+
 - Validates command structure and data
 - Checks business rules and constraints
 - Validates aggregate state transitions
@@ -486,11 +539,13 @@ package "Command Module" {
 - Returns early on validation failures
 
 **Command Router**
+
 - Routes commands to domain services
 - Handles service errors
 - Manages command timeouts
 
 **Transaction Boundary**
+
 - Manages database transactions
 - Handles rollbacks
 - Maintains data consistency
@@ -500,12 +555,14 @@ package "Command Module" {
 The Query Module handles all read operations, managing optimized read models and caching strategies for different client needs.
 
 #### Core Responsibilities:
+
 - Process read queries
 - Maintain optimized read models
 - Transform query results
 - Subscribe to relevant events
 
 #### Component Diagram:
+
 ```plantuml
 @startuml
 package "Query Module" {
@@ -533,16 +590,19 @@ queue "Event Bus"
 #### Component Details:
 
 **Query Handler**
+
 - Routes queries to appropriate handlers
 - Manages response transformation
 - Handles pagination requests
 
 **Read Model Updater**
+
 - Subscribes to domain events
 - Updates read models by refreshing materialized views
 - Maintains model consistency
 
 **Query Optimizer**
+
 - Basic query execution plans
 - Implements pagination
 - Handles basic sorting and filtering
@@ -552,11 +612,13 @@ queue "Event Bus"
 The Categorization Module provides transaction categorization.
 
 #### Core Responsibilities:
+
 - Basic transaction categorization
 - Handle user category updates
 - Process categorization business logic
 
 #### Component Diagram:
+
 ```plantuml
 @startuml
 package "Categorization Module" {
@@ -579,6 +641,7 @@ database "PostgreSQL"
 #### **Component Details:**
 
 **Category Manager**
+
 - Orchestrates categorization workflow
 - Manages category hierarchy
 - Handles user overrides
@@ -590,11 +653,13 @@ database "PostgreSQL"
 The Financial Insights Module processes financial data to provide real-time insights and reports.
 
 #### Core Responsibilities:
+
 - Calculate basic net worth
 - Generate category breakdowns
 - Track monthly trends
 
 #### Component Diagram:
+
 ```plantuml
 @startuml
 package "Financial Insights Module" {
@@ -618,11 +683,13 @@ database "PostgreSQL"
 #### Component Details:
 
 **Insights Engine**
+
 - Receives domain events (transactions, categories)
 - Performs financial calculations
 - Creates analytics commands for persistence
 
 **Report Generator**
+
 - Handles report requests
 - Uses Query Module to access pre-calculated data
 - Formats data for presentation
@@ -678,6 +745,7 @@ database "PostgreSQL"
 ### File Naming Conventions
 
 #### Backend
+
 - Domain entities: `Entity.ts`
 - Commands: `EntityCommand.ts`
 - Queries: `EntityQuery.ts`
@@ -686,6 +754,7 @@ database "PostgreSQL"
 - Tests: `Entity.test.ts`
 
 #### Frontend
+
 - Pages: `EntityPage.tsx`
 - Islands: `EntityIsland.tsx`
 - Components: `EntityComponent.tsx`
@@ -695,6 +764,7 @@ database "PostgreSQL"
 ### Database Migration Strategy
 
 #### Tools and Setup
+
 - **Nessie**: Type-safe database migration tool for Deno
 - Version-controlled migrations
 - Forward and reverse migrations support
@@ -702,9 +772,10 @@ database "PostgreSQL"
 - Migration status tracking
 
 #### Migration Naming Convention
+
 ```typescript
 // Example migration file: db/migrations/timestamps/20240101T120000_create_accounts.ts
-import { AbstractMigration, Info } from "https://deno.land/x/nessie/mod.ts";
+import { AbstractMigration, Info } from 'https://deno.land/x/nessie/mod.ts';
 
 export default class extends AbstractMigration {
   /** Runs on migrate */
@@ -732,18 +803,21 @@ export default class extends AbstractMigration {
 ## Installation Guide
 
 ### Prerequisites
+
 - Deno
 - Docker & Docker Compose
 
 ### Local Development Setup
 
 1. **Install**
+
 ```bash
 # Install Deno dependencies
 deno cache deps.ts
 ```
 
 2. **Database Setup**
+
 ```bash
 # Start PostgreSQL container
 docker compose up db -d
@@ -759,6 +833,7 @@ deno task nessie seed
 ```
 
 3. **Start Services**
+
 ```bash
 # Start backend and frontend
 deno task dev

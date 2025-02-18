@@ -1,6 +1,7 @@
 # Sequence Diagrams
 
 ## Table of Contents
+
 - [Transaction Management](#transaction-management)
 - [Balance Updates](#balance-updates)
 - [Analytics Updates](#analytics-updates)
@@ -8,6 +9,7 @@
 ## Transaction Management
 
 ### Create Transaction
+
 ```plantuml
 @startuml
 !pragma teoz true
@@ -86,6 +88,7 @@ deactivate CH
 ```
 
 ### Update Transaction Category
+
 ```plantuml
 @startuml
 !pragma teoz true
@@ -147,6 +150,7 @@ deactivate CH
 ```
 
 ### Calculate Net Worth
+
 ```plantuml
 @startuml
 !pragma teoz true
@@ -192,6 +196,7 @@ deactivate QM
 ```
 
 ### Calculate Category Insights
+
 ```plantuml
 @startuml
 !pragma teoz true
@@ -242,6 +247,7 @@ deactivate QM
 ```
 
 ### Key Events Flow
+
 1. Transaction Events:
    - TransactionCreated -> Updates balances, transaction models
    - TransactionCategorized -> Updates analytics, insights

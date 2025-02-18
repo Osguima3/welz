@@ -1,0 +1,27 @@
+{
+  "lock": false,
+  "imports": {},
+  "tasks": {
+    "backend:start": "deno task -c apps/backend/deno.json start",
+    "backend:test": "deno task -c apps/backend/deno.json test",
+    "backend:migrate": "deno task -c apps/backend/deno.json migrate",
+    "backend:seed": "deno task -c apps/backend/deno.json seed",
+    "web:start": "deno task -c apps/web/deno.json start"
+  },
+  "workspace": ["./apps/backend", "./apps/web"],
+  "nodeModulesDir": "auto",
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": ["single-import"]
+    }
+  },
+  "fmt": {
+    "singleQuote": true,
+    "semiColons": true,
+    "lineWidth": 120,
+    "indentWidth": 2,
+    "useTabs": false,
+    "proseWrap": "preserve"
+  }
+}
