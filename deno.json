@@ -1,19 +1,33 @@
 {
   "lock": false,
-  "imports": {},
-  "tasks": {
-    "backend:start": "deno task -c apps/backend/deno.json start",
-    "backend:test": "deno task -c apps/backend/deno.json test",
-    "backend:migrate": "deno task -c apps/backend/deno.json migrate",
-    "backend:seed": "deno task -c apps/backend/deno.json seed",
-    "web:start": "deno task -c apps/web/deno.json start"
-  },
   "workspace": ["./apps/backend", "./apps/web"],
+  "tasks": {
+    "start": "deno task start:backend & deno task start:web",
+    "backend:migrate": "deno task -c apps/backend/deno.json migrate",
+    "backend:test": "deno test -A --coverage=coverage apps/backend",
+    "backend:start": "deno task -c apps/backend/deno.json start",
+    "web:test": "deno test -A --coverage=coverage apps/web",
+    "web:start": "deno task -c apps/web/deno.json start",
+    "test": "deno test -A --coverage=coverage",
+    "coverage": "deno coverage coverage --lcov --output=coverage/lcov.info",
+    "coverage:report": "deno coverage coverage",
+    "check": "deno check apps/backend apps/web"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true
+  },
+  "importMap": "./import_map.json",
   "nodeModulesDir": "auto",
   "lint": {
     "rules": {
       "tags": ["recommended"],
-      "include": ["single-import"]
+      "include": ["recommended/single-import"]
     }
   },
   "fmt": {

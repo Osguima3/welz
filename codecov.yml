@@ -1,0 +1,25 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+        threshold: 2%
+
+  ignore:
+    - 'node_modules/**/*'
+    - 'apps/web/fresh.gen.ts'
+    - '**/*.test.ts'
+    - '**/*.test.tsx'
+    - '**/test/**'
+    - '.deno/**/*'
+    - 'coverage/**/*'
+    - 'dist/**/*'
+
+comment:
+  layout: 'reach, diff, flags, files'
+  behavior: default
+  require_changes: true

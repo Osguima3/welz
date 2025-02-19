@@ -162,7 +162,6 @@ Set up testing infrastructure for both frontend and backend.
 **Details**
 
 - Configure testing frameworks for Deno/Fresh
-- Set up E2E testing with Playwright
 - Configure test database handling
 - Set up test coverage reporting
 - Implement CI test automation
@@ -170,7 +169,6 @@ Set up testing infrastructure for both frontend and backend.
 **Acceptance Criteria**
 
 - Unit testing framework is configured
-- E2E tests can be run locally
 - Test database setup/teardown works
 - Coverage reports are generated
 - Tests run in CI pipeline
@@ -456,11 +454,12 @@ Implement unit tests for frontend components and services.
 ### **[WELZ-014][Testing] Implement E2E test suite**
 
 **Description**\
-Implement end-to-end tests for the application.
+Implement end-to-end tests for the application using Playwright test framework.
 
 **Details**
 
 - Set up E2E test structure
+- Configure Playwright for cross-browser testing
 - Write tests for core user flows
 - Implement test automation
 - Integrate with CI pipeline
@@ -468,8 +467,11 @@ Implement end-to-end tests for the application.
 **Acceptance Criteria**
 
 - Core user flows are covered
+- Tests can be run locally
+- Tests run in multiple browsers (Chrome, Firefox, Safari)
 - Tests run in CI pipeline
-- Test results are reported
+- Visual regression tests implemented
+- Test results are reported with screenshots and videos
 
 **Effort:** L\
 **Priority:** High\

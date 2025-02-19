@@ -1,12 +1,11 @@
 {
-  "compilerOptions": {
-    "lib": ["deno.ns", "deno.unstable"],
-    "strict": true
-  },
   "tasks": {
     "start": "deno run --allow-net --allow-read src/main.ts",
-    "test": "deno test --allow-net --allow-read",
+    "test": "deno test -A --coverage=coverage/backend",
     "migrate": "deno run -A https://deno.land/x/nessie/cli.ts migrate -c ./nessie.config.ts",
     "seed": "deno run -A https://deno.land/x/nessie/cli.ts seed -c ./nessie.config.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "deno.unstable"]
   }
 }

@@ -28,3 +28,10 @@ out/
 # System files (Windows)
 Thumbs.db
 Desktop.ini
+
+# Coverage directories
+coverage/
+coverage.lcov
+
+# macOS system files
+.DS_Store
