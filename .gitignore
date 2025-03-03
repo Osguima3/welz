@@ -22,8 +22,12 @@ build/
 dist/
 out/
 
-# Environment variables
-*.env
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
 
 # System files (Windows)
 Thumbs.db
@@ -35,3 +39,9 @@ coverage.lcov
 
 # macOS system files
 .DS_Store
+
+# Fresh build directory
+_fresh/
+
+# npm dependencies
+node_modules/

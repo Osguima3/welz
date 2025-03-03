@@ -4,13 +4,15 @@
   "tasks": {
     "start": "deno task start:backend & deno task start:web",
     "backend:migrate": "deno task -c apps/backend/deno.json migrate",
-    "backend:test": "deno test -A --coverage=coverage apps/backend",
+    "backend:test": "deno test -A apps/backend",
     "backend:start": "deno task -c apps/backend/deno.json start",
-    "web:test": "deno test -A --coverage=coverage apps/web",
+    "web:test": "deno test -A apps/web",
     "web:start": "deno task -c apps/web/deno.json start",
-    "test": "deno test -A --coverage=coverage",
+    "test": "deno test -A --clean --coverage=coverage && deno task coverage:clean",
+    "test:pwsh": "deno test -A --clean --coverage=coverage; deno task coverage:clean",
     "coverage": "deno coverage coverage --lcov --output=coverage/lcov.info",
     "coverage:report": "deno coverage coverage",
+    "coverage:clean": "deno run -A tools/clean-coverage.ts",
     "check": "deno check apps/backend apps/web"
   },
   "compilerOptions": {
@@ -22,8 +24,6 @@
     "noImplicitAny": true,
     "noImplicitThis": true
   },
-  "importMap": "./import_map.json",
-  "nodeModulesDir": "auto",
   "lint": {
     "rules": {
       "tags": ["recommended"],
@@ -37,5 +37,6 @@
     "indentWidth": 2,
     "useTabs": false,
     "proseWrap": "preserve"
-  }
+  },
+  "importMap": "./import_map.json"
 }

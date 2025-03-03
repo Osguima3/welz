@@ -24,19 +24,24 @@
 
 ```typescript
 // Example of Effect TS unit test
-import { Effect, pipe } from '@effect/io/Effect';
-import { describe, it } from 'std/testing/bdd.ts';
+import { Effect, pipe } from 'effect';
 import { assertEquals } from 'std/testing/asserts.ts';
 
-describe('TransactionService', () => {
-  it('should categorize transaction', () => {
-    const program = pipe(
-      TransactionService.categorize(mockTransaction),
-      Effect.map((category) => category.name),
+Deno.test('Example', async (t) => {
+  await t.step('should assert success', async () => {
+    const result = Effect.runPromise(Effect.success(1));
+
+    assertEquals(result, 1);
+  });
+
+  await t.step('should assert failure', async () => {
+    const result = Effect.runPromise(
+      Effect.fail(new Error('error')).pipe(
+        Effect.flip,
+      ),
     );
 
-    const result = Effect.runSync(program);
-    assertEquals(result, 'Groceries');
+    assertEquals(result.message, 'error');
   });
 });
 ```
@@ -45,12 +50,11 @@ describe('TransactionService', () => {
 
 ```typescript
 // Example of CQRS flow test
-import { superoak } from 'superoak';
-import { describe, it } from 'std/testing/bdd.ts';
+import { superdeno } from 'superdeno';
 
-describe('Transaction Commands', () => {
-  it('should create transaction and update read model', async () => {
-    const request = await superoak(app);
+Deno.test('Transaction Commands', async () => {
+  await t.step('should create transaction and update read model', async () => {
+    const request = superdeno(app);
     await request
       .post('/api/transactions')
       .send(mockTransaction)
@@ -62,7 +66,7 @@ describe('Transaction Commands', () => {
       .expect(200);
 
     assertEquals(readModel.body[0].id, mockTransaction.id);
-  });
+  }
 });
 ```
 

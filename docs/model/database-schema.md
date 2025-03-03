@@ -154,16 +154,3 @@ Denormalized view of transactions with their categories.
 | category_id    | UUID          | Category reference    |
 | category_name  | VARCHAR(100)  | Category name         |
 | category_type  | VARCHAR(20)   | INCOME or EXPENSE     |
-
-## Supporting Tables
-
-### idempotency_keys
-
-**Purpose**: Prevents duplicate command processing.
-
-| Attribute    | Type         | Description               | Constraints                         |
-| ------------ | ------------ | ------------------------- | ----------------------------------- |
-| key          | VARCHAR(255) | Unique command identifier | Primary Key                         |
-| command_type | VARCHAR(100) | Type of command           | Not Null                            |
-| expires_at   | TIMESTAMPTZ  | Expiration timestamp      | Not Null                            |
-| created_at   | TIMESTAMPTZ  | Creation timestamp        | Not Null, Default CURRENT_TIMESTAMP |
