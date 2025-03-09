@@ -1,33 +1,24 @@
 import { Schema } from 'effect';
+import { AccountBalanceUpdatedEvent, AccountCreatedEvent } from '../../domain/account/events.ts';
+import { CategoryCreatedEvent, CategoryUpdatedEvent } from '../../domain/category/events.ts';
+import { TransactionCategorizedEvent, TransactionCreatedEvent } from '../../domain/transaction/events.ts';
 
-export enum EventType {
-  TRANSACTION_CREATED = 'TRANSACTION_CREATED',
-  TRANSACTION_UPDATED = 'TRANSACTION_UPDATED',
-}
+export type EventType = (typeof EventType)[keyof typeof EventType];
+export const EventType = {
+  TRANSACTION_CREATED: 'TransactionCreated',
+  TRANSACTION_CATEGORIZED: 'TransactionCategorized',
+  ACCOUNT_CREATED: 'AccountCreated',
+  ACCOUNT_BALANCE_UPDATED: 'AccountBalanceUpdated',
+  CATEGORY_CREATED: 'CategoryCreated',
+  CATEGORY_UPDATED: 'CategoryUpdated',
+} as const;
 
-const EventMetadata = Schema.Struct({
-  timestamp: Schema.String,
-  correlationId: Schema.optional(Schema.String),
-});
-
-export const TransactionCreatedEvent = Schema.Struct({
-  type: Schema.Literal(EventType.TRANSACTION_CREATED),
-  payload: Schema.Struct({
-    transactionId: Schema.String,
-    accountId: Schema.String,
-    amount: Schema.Struct({
-      amount: Schema.BigIntFromSelf,
-      currency: Schema.String,
-    }),
-    date: Schema.DateFromSelf,
-    description: Schema.optional(Schema.String),
-    category: Schema.optional(Schema.String),
-  }),
-  metadata: EventMetadata,
-});
-
+export type WelzEvent = typeof WelzEvent.Type;
 export const WelzEvent = Schema.Union(
   TransactionCreatedEvent,
+  TransactionCategorizedEvent,
+  AccountCreatedEvent,
+  AccountBalanceUpdatedEvent,
+  CategoryCreatedEvent,
+  CategoryUpdatedEvent,
 );
-
-export type WelzEvent = Schema.Schema.Type<typeof WelzEvent>;

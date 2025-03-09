@@ -1,99 +1,59 @@
 import { assertEquals, assertExists, assertStringIncludes } from '$std/assert/mod.ts';
 import { Effect, Layer } from 'effect';
-import { randomUUID, UUID } from 'node:crypto';
-import { EventPublisher } from '../../../../src/application/command/EventPublisher.ts';
+import { randomUUID } from 'node:crypto';
 import { CreateTransaction } from '../../../../src/application/command/transaction/CreateTransaction.ts';
-import { TransactionBoundary } from '../../../../src/application/command/TransactionBoundary.ts';
 import { EventType } from '../../../../src/application/schema/Event.ts';
-
-// Mock services and track their calls
-let eventPublisherCalls = 0;
-let publishedEvent: unknown;
+import { TransactionRepository } from '../../../../src/domain/transaction/TransactionRepository.ts';
+import * as TestCommands from '../../../helper/TestCommands.ts';
+import { TestEventPublisher } from '../../../helper/TestEventPublisherLayers.ts';
+import { UnitTestLayer } from '../../../helper/TestLayers.ts';
 
 const accountId = randomUUID();
 const publisherFailedAccountId = randomUUID();
 
-const TestEventPublisher = Layer.succeed(
-  EventPublisher,
+const transaction = TestCommands.createTransaction(accountId);
+const failedTransaction = TestCommands.createTransaction(publisherFailedAccountId);
+
+const TestTransactionRepository = Layer.succeed(
+  TransactionRepository,
   {
-    publish: (event) => {
-      if (event.payload.accountId === publisherFailedAccountId) {
-        return Effect.fail(new Error('Failed to publish event'));
-      } else {
-        eventPublisherCalls++;
-        publishedEvent = event;
-        return Effect.succeed(undefined);
-      }
-    },
-    publishAll: () => Effect.succeed(undefined),
+    findTransactions: () => Effect.fail(new Error('Not implemented')),
+    findById: () => Effect.fail(new Error('Not implemented')),
+    save: (transaction) => Effect.succeed(transaction),
   },
 );
 
-const TestTransactionBoundary = Layer.succeed(
-  TransactionBoundary,
-  (operation) => operation(),
-);
-
-const TestLayer = CreateTransaction.Live.pipe(
-  Layer.provide(TestEventPublisher),
-  Layer.provide(TestTransactionBoundary),
-);
-
 Deno.test('CreateTransaction', async (t) => {
+  const createTransaction = await CreateTransaction.pipe(
+    Effect.provide(CreateTransaction.Live),
+    Effect.provide(UnitTestLayer),
+    Effect.provide(TestTransactionRepository),
+    Effect.runPromise,
+  );
+
   await t.step('should successfully create a transaction with valid input', async () => {
-    // Reset tracking
-    eventPublisherCalls = 0;
-    publishedEvent = null;
+    TestEventPublisher.reset();
 
-    const transaction = testCreateTransactionCommand(accountId);
+    const result = await Effect.runPromise(createTransaction(transaction));
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const createTransaction = yield* CreateTransaction;
-        const result = yield* createTransaction(transaction);
+    assertExists(result);
+    assertEquals(accountId, transaction.accountId);
 
-        // Assert transaction was created
-        assertExists(result);
-        assertEquals(accountId, transaction.accountId);
+    assertEquals(TestEventPublisher.count(), 1, 'Event publisher should be called once');
 
-        // Verify service calls
-        assertEquals(eventPublisherCalls, 1, 'Event publisher should be called once');
-
-        // Verify published event
-        const event = publishedEvent as { type: EventType };
-        assertEquals(event.type, EventType.TRANSACTION_CREATED);
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
+    const event = TestEventPublisher.popEvent() as { type: EventType };
+    assertEquals(event.type, 'TransactionCreated');
   });
 
   await t.step('should fail when event publisher fails', async () => {
-    const transaction = testCreateTransactionCommand(publisherFailedAccountId);
+    TestEventPublisher.setFail(true);
 
-    const error = await Effect.runPromise(
-      Effect.gen(function* () {
-        const createTransaction = yield* CreateTransaction;
-        return yield* createTransaction(transaction);
-      }).pipe(
-        Effect.flip,
-        Effect.provide(TestLayer),
-      ),
-    );
+    const error = await Effect.runPromise(createTransaction(failedTransaction).pipe(Effect.flip));
 
     assertStringIncludes(error.message, 'Failed to publish event');
   });
-});
 
-function testCreateTransactionCommand(accountId: UUID) {
-  return {
-    type: 'CreateTransaction' as const,
-    accountId: accountId,
-    amount: {
-      amount: BigInt(1000),
-      currency: 'EUR',
-    },
-    date: new Date(),
-    description: 'Test transaction',
-  };
-}
+  await t.step('teardown', () => {
+    TestEventPublisher.reset();
+  });
+});

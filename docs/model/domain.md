@@ -41,7 +41,7 @@ This document provides a comprehensive view of our domain model following DDD pr
 ### Transaction Aggregate
 
 - **Root**: `Transaction`
-- **Value Objects**: `Money`, `TransactionMetadata`
+- **Value Objects**: `Money`
 - **Commands**:
   ```typescript
   interface CreateTransactionCommand {
@@ -50,7 +50,6 @@ This document provides a comprehensive view of our domain model following DDD pr
     date: Date;
     description?: string;
     category?: string;
-    metadata?: TransactionMetadata;
   }
 
   interface CategorizeTransactionCommand {
@@ -221,7 +220,6 @@ interface TransactionReadModel {
   description: string;
   category: CategoryReadModel;
   merchantName?: string;
-  metadata: TransactionMetadata;
 }
 ```
 
@@ -268,16 +266,6 @@ interface Money {
   subtract(other: Money): Money;
   multiply(factor: number): Money;
   equals(other: Money): boolean;
-}
-```
-
-### TransactionMetadata
-
-```typescript
-interface TransactionMetadata {
-  description: string;
-  merchantName?: string;
-  reference?: string;
 }
 ```
 

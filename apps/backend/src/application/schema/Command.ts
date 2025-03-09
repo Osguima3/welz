@@ -1,8 +1,7 @@
 import { Schema } from 'effect';
-import { CreateUserCommand } from './User.ts';
-import { CreateTransactionCommand } from './Transaction.ts';
+import { CreateTransactionCommand } from '../../domain/transaction/commands.ts';
 
-export const CommandSchema = Schema.Union(
-  CreateUserCommand,
+export type Command = typeof Command.Type;
+export const Command = Schema.Union(
   CreateTransactionCommand,
 );

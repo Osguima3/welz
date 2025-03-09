@@ -1,28 +1,26 @@
-import { assertEquals, assertExists, assertMatch } from '$std/assert/mod.ts';
+import { assertEquals, assertExists } from '$std/assert/mod.ts';
 import { Effect, Layer } from 'effect';
-import { EventPublisher } from '../../../src/application/command/EventPublisher.ts';
-import { EventBus } from '../../../src/shared/events/EventBus.ts';
-import { EventType } from '../../../src/application/schema/Event.ts';
-import type { WelzEvent } from '../../../src/application/schema/Event.ts';
 import { randomUUID } from 'node:crypto';
+import { EventPublisher } from '../../../src/application/command/EventPublisher.ts';
+import type { WelzEvent } from '../../../src/application/schema/Event.ts';
+import { EventType } from '../../../src/application/schema/Event.ts';
+import { Money } from '../../../src/domain/common/Money.ts';
+import { EventBus } from '../../../src/shared/events/EventBus.ts';
 
-// Track published events
 let publishedEvents: WelzEvent[] = [];
 
 const event = {
   type: EventType.TRANSACTION_CREATED,
+  metadata: {
+    timestamp: new Date(),
+    correlationId: randomUUID(),
+  },
   payload: {
-    transactionId: '123',
+    id: '123',
     accountId: randomUUID(),
-    amount: {
-      amount: BigInt(1000),
-      currency: 'EUR',
-    },
+    amount: Money.create(1000, 'EUR'),
     date: new Date(),
     description: 'Test transaction',
-  },
-  metadata: {
-    timestamp: new Date().toISOString(),
   },
 } satisfies WelzEvent;
 
@@ -38,89 +36,88 @@ const TestEventBus = Layer.succeed(
   },
 );
 
-const TestLayer = EventPublisher.Live.pipe(
-  Layer.provide(TestEventBus),
-);
-
 Deno.test('EventPublisher', async (t) => {
-  await t.step('should enrich events with metadata', async () => {
-    publishedEvents = [];
+  const publisher = await EventPublisher.pipe(
+    Effect.provide(EventPublisher.Live),
+    Effect.provide(TestEventBus),
+    Effect.runPromise,
+  );
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const publisher = yield* EventPublisher;
-        yield* publisher.publish(event);
-
-        assertEquals(publishedEvents.length, 1);
-        const publishedEvent = publishedEvents[0];
-
-        assertExists(publishedEvent.metadata.correlationId);
-        assertMatch(publishedEvent.metadata.timestamp, /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-        assertMatch(publishedEvent.metadata.correlationId, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
-  });
-
-  await t.step('should preserve existing metadata values', async () => {
+  await t.step('should preserve existing metadata timestamp and correlationId when provided', async () => {
     publishedEvents = [];
     const existingMetadata = {
-      timestamp: '2024-01-01T00:00:00Z',
-      correlationId: 'existing-id',
+      timestamp: new Date(2024, 0, 1),
+      correlationId: randomUUID(),
     };
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const publisher = yield* EventPublisher;
-        yield* publisher.publish({
-          ...event,
-          metadata: existingMetadata,
-        });
+    const eventWithMetadata = {
+      ...event,
+      metadata: existingMetadata,
+    };
 
-        assertEquals(publishedEvents.length, 1);
-        const publishedEvent = publishedEvents[0];
+    await Effect.runPromise(publisher.publish(eventWithMetadata));
 
-        assertEquals(publishedEvent.metadata, existingMetadata);
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
+    assertEquals(publishedEvents.length, 1);
+
+    const publishedEvent = publishedEvents[0];
+    assertEquals(publishedEvent.metadata?.timestamp, existingMetadata.timestamp);
+    assertEquals(publishedEvent.metadata?.correlationId, existingMetadata.correlationId);
   });
 
-  await t.step('should maintain same correlation ID when publishing multiple events', async () => {
+  await t.step('should add default metadata when partial metadata provided', async () => {
     publishedEvents = [];
-    const events = [event, event, event];
+    const eventWithPartialMetadata = {
+      ...event,
+      metadata: {
+        timestamp: new Date(),
+      },
+    };
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const publisher = yield* EventPublisher;
-        yield* publisher.publishAll(events);
+    await Effect.runPromise(publisher.publish(eventWithPartialMetadata));
 
-        assertEquals(publishedEvents.length, 3);
+    assertEquals(publishedEvents.length, 1);
+    const publishedEvent = publishedEvents[0];
 
-        const correlationId = publishedEvents[0].metadata.correlationId;
-        for (const event of publishedEvents) {
-          assertEquals(event.metadata.correlationId, correlationId);
-        }
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
+    assertExists(publishedEvent.metadata?.correlationId);
+    assertEquals(publishedEvent.metadata?.timestamp, eventWithPartialMetadata.metadata.timestamp);
   });
 
-  await t.step('should handle empty event batch', async () => {
+  await t.step('should use same correlationId and timestamp for all events in batch', async () => {
     publishedEvents = [];
+    const timestamp = new Date();
+    const events = [
+      { ...event, metadata: { timestamp } },
+      { ...event, metadata: { timestamp } },
+    ];
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const publisher = yield* EventPublisher;
-        yield* publisher.publishAll([]);
+    await Effect.runPromise(publisher.publishAll(events));
 
-        assertEquals(publishedEvents.length, 0);
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
+    assertEquals(publishedEvents.length, 2);
+
+    const correlationId = publishedEvents[0].metadata?.correlationId;
+    assertExists(correlationId);
+
+    for (const event of publishedEvents) {
+      assertEquals(event.metadata?.correlationId, correlationId);
+      assertEquals(event.metadata?.timestamp, timestamp);
+    }
+  });
+
+  await t.step('should preserve existing correlationId when present in first event of batch', async () => {
+    publishedEvents = [];
+    const existingCorrelationId = randomUUID();
+    const timestamp = new Date();
+    const events = [
+      { ...event, metadata: { timestamp, correlationId: existingCorrelationId } },
+      { ...event, metadata: { timestamp } },
+    ];
+
+    await Effect.runPromise(publisher.publishAll(events));
+
+    assertEquals(publishedEvents.length, 2);
+
+    for (const event of publishedEvents) {
+      assertEquals(event.metadata?.correlationId, existingCorrelationId);
+    }
   });
 });

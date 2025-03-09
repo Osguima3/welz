@@ -13,10 +13,10 @@
 
 ### Integration Testing
 
-- **Framework**: Deno Test + SuperDeno
-  - SuperDeno for HTTP assertions
-  - Testing CQRS flows end-to-end
-  - Database integration testing
+- **Framework**: Deno Test
+  - Native support for HTTP assertions using fetch
+  - Enables testing of CQRS flows end-to-end with a configured server environment
+  - No longer uses SuperDeno
 
 ## Testing Approach
 
@@ -48,25 +48,69 @@ Deno.test('Example', async (t) => {
 
 ### Integration Tests
 
+#### Controller tests
+
 ```typescript
-// Example of CQRS flow test
-import { superdeno } from 'superdeno';
+Deno.test('Transaction Commands', async (t) => {
+  let baseUrl: string;
+  let server: Deno.HttpServer;
 
-Deno.test('Transaction Commands', async () => {
-  await t.step('should create transaction and update read model', async () => {
-    const request = superdeno(app);
-    await request
-      .post('/api/transactions')
-      .send(mockTransaction)
-      .expect(201);
+  await t.step('setup', async () => {
+    const result = await createTestServer(TestEnvLayer);
+    baseUrl = result.baseUrl;
+    server = result.server;
+  });
 
-    // Verify read model was updated
-    const readModel = await request
-      .get('/api/transactions')
-      .expect(200);
+  await t.step('should create transaction successfully', async () => {
+    const response = await fetch(`${baseUrl}/api/transactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mockTransaction),
+    });
+    assertEquals(response.status, 201);
+    const result = await response.json();
+    // ...assertions on result...
+  });
 
-    assertEquals(readModel.body[0].id, mockTransaction.id);
-  }
+  await t.step('cleanup', async () => {
+    await server.shutdown();
+  });
+});
+```
+
+#### Repositories, Commands and Queries
+
+```typescript
+import { assertEquals } from '$std/assert/mod.ts';
+import { Effect } from 'effect';
+import { randomUUID } from 'node:crypto';
+import { TransactionRepository } from '../../../src/domain/transaction/TransactionRepository.ts';
+import { TestApp } from '../../helper/TestApp.ts';
+import { IntegrationTestRepositoryLayer } from '../../helper/TestRepositoryLayers.ts';
+
+Deno.test('PostgresTransactionRepository Integration', async (t) => {
+  const app = new TestApp();
+  const testAccountId = randomUUID();
+
+  const repository = await TransactionRepository.pipe(
+    Effect.provide(IntegrationTestRepositoryLayer),
+    Effect.runPromise,
+  );
+
+  await setupTestData(testAccountId);
+
+  await t.step('should find all transactions for an account', async () => {
+    const result = await Effect.runPromise(repository.findTransactions({ accountId: testAccountId }));
+
+    assertEquals(result.total, 3);
+    assertEquals(result.transactions.length, 3);
+    assertEquals(result.page, 1);
+    assertEquals(result.pageSize, 10);
+
+    result.transactions.forEach((transaction) => {
+      assertEquals(transaction.accountId, testAccountId);
+    });
+  });
 });
 ```
 
@@ -89,6 +133,23 @@ test('basic transaction flow', async ({ page }) => {
   await expect(page.locator('[data-test=transaction-list]'))
     .toContainText('Test');
 });
+```
+
+### Mocking Strategy
+
+#### Example 1: Dependency Injection
+
+Use test-specific layers to override production implementations.
+
+```typescript
+import { Effect, Layer } from 'effect';
+import { EventPublisher } from '../../../src/application/command/EventPublisher.ts';
+
+const publisher = await EventPublisher.pipe(
+  Effect.provide(EventPublisher.Live),
+  Effect.provide(TestEventBus),
+  Effect.runPromise,
+);
 ```
 
 ## Naming Conventions
@@ -133,7 +194,7 @@ test('basic transaction flow', async ({ page }) => {
 
 - Mock external services in integration tests
 - Prefer dependency injection for easier mocking
-- Document mock behaviors
+- Document mock behaviors and provide examples:
 
 ### Performance
 

@@ -71,7 +71,6 @@
 - **Value Objects**:
   - Money (amount + currency)
   - DateRange
-  - TransactionMetadata
 
 - **Domain Events**:
   - TransactionCreated
@@ -582,8 +581,8 @@ queue "Event Bus"
 
 [API Gateway] --> [Command Router] : User Commands
 [Command Router] --> [Command Handlers] : Route commands
-[Command Handlers] -left-> [Transaction Boundary] : Transaction\nContext
-[Transaction Boundary] -down-> [PostgreSQL] : Persist Changes
+[Command Handlers] -left-> [Transaction Manager] : Transaction\nContext
+[Transaction Manager] -down-> [PostgreSQL] : Persist Changes
 [Command Handlers] -down--> [Domain Services] : Call domain services
 [Command Handlers] -up-> [Event Publisher] : On Success
 [Event Publisher] -up-> [Event Bus] : Publish Events
@@ -607,7 +606,7 @@ queue "Event Bus"
 - Error handling and validation
 - Event publishing on successful execution
 
-**Transaction Boundary**
+**Transaction Manager**
 
 - Manages database transactions
 - Automatic rollback on errors
@@ -693,7 +692,7 @@ queue "Event Bus"
 
 **Query Handlers**
 
-- Process specific query types (e.g., GetTransaction, GetUser)
+- Process specific query types (e.g., GetAccountTransactions)
 - Read from optimized query models
 - Handle data filtering and sorting
 - Manage query parameters validation
@@ -891,8 +890,8 @@ database "PostgreSQL"
 #### Migration Naming Convention
 
 ```typescript
-// Example migration file: db/migrations/timestamps/20240101T120000_create_accounts.ts
-import { AbstractMigration, Info } from 'https://deno.land/x/nessie/mod.ts';
+// Example migration file: db/migrations/timestamps/20250303210900_create_accounts.ts
+import { AbstractMigration, Info } from '$nessie/mod.ts';
 
 export default class extends AbstractMigration {
   /** Runs on migrate */

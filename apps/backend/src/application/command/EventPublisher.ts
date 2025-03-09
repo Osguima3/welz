@@ -14,25 +14,27 @@ export class EventPublisher extends Context.Tag('EventPublisher')<
     EventPublisher,
     Effect.gen(function* () {
       const eventBus = yield* EventBus;
-      const _publish = (event: WelzEvent, timestamp: string, correlationId: string) =>
+      const _publish = (event: WelzEvent, timestamp: Date, correlationId: string) =>
         Effect.gen(function* () {
           const enrichedEvent = {
             ...event,
             metadata: {
-              ...event.metadata,
-              timestamp: event.metadata.timestamp || timestamp,
-              correlationId: event.metadata.correlationId || correlationId,
+              timestamp: event.metadata?.timestamp || timestamp,
+              correlationId: event.metadata?.correlationId || correlationId,
             },
           };
 
-          yield* Effect.logInfo('Publishing event, type' + enrichedEvent.type + ', correlationId' + enrichedEvent.metadata.correlationId + ', event' + event);
+          yield* Effect.logInfo(
+            'Publishing event, type ' + enrichedEvent.type + ', correlationId ' + correlationId +
+              ', event ' + JSON.stringify(event),
+          );
 
           yield* eventBus.publish(enrichedEvent);
         });
 
       return {
         publish(event) {
-          return _publish(event, new Date().toISOString(), randomUUID());
+          return _publish(event, new Date(), randomUUID());
         },
 
         publishAll(events) {
@@ -41,7 +43,7 @@ export class EventPublisher extends Context.Tag('EventPublisher')<
               return;
             }
 
-            const timestamp = new Date().toISOString();
+            const timestamp = new Date();
             const correlationId = events[0]?.metadata?.correlationId || randomUUID();
             yield* Effect.all(
               events.map((event) => _publish(event, timestamp, correlationId)),

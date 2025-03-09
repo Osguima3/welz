@@ -7,14 +7,11 @@
 import '$std/dotenv/load.ts';
 import { Effect } from 'effect';
 import { ApiController } from './infrastructure/http/ApiController.ts';
-import { TestEnvLayer } from './infrastructure/layer/EnvLayer.ts';
+import { LocalEnvLayer } from './infrastructure/layer/EnvLayer.ts';
 
-// Create API controller instance with dependencies
-const api = await Effect.runPromise(
-  Effect.gen(function* () {
-    return yield* ApiController;
-  }).pipe(Effect.provide(TestEnvLayer)),
+const api = await ApiController.pipe(
+  Effect.provide(LocalEnvLayer),
+  Effect.runPromise,
 );
 
-// Main request handler for Deno Deploy
-Deno.serve(api);
+Deno.serve({ port: 8000 }, api);

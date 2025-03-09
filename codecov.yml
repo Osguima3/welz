@@ -10,10 +10,7 @@ coverage:
         threshold: 2%
 
   ignore:
-    - 'node_modules/**/*'
     - 'apps/web/fresh.gen.ts'
-    - '**/*.test.ts'
-    - '**/*.test.tsx'
     - '**/test/**'
     - '.deno/**/*'
     - 'coverage/**/*'

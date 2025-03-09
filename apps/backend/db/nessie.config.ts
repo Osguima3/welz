@@ -1,4 +1,4 @@
-import { ClientPostgreSQL, NessieConfig } from 'https://deno.land/x/nessie@2.0.11/mod.ts';
+import { ClientPostgreSQL, NessieConfig } from '$nessie/mod.ts';
 
 const client = new ClientPostgreSQL({
   database: 'welz_db',
@@ -10,8 +10,8 @@ const client = new ClientPostgreSQL({
 
 const config: NessieConfig = {
   client,
-  migrationFolders: ['./migrations'],
-  seedFolders: ['./seeds'],
+  migrationFolders: ['./db/migrations'],
+  seedFolders: ['./db/seeds'],
 };
 
 export default config;

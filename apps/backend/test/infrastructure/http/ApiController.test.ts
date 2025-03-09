@@ -1,168 +1,127 @@
 import { assertEquals } from '$std/assert/mod.ts';
 import { Effect, Layer } from 'effect';
-import { ApiController } from '../../../src/infrastructure/http/ApiController.ts';
+import { randomUUID } from 'node:crypto';
 import { CommandRouter } from '../../../src/application/command/CommandRouter.ts';
 import { QueryRouter } from '../../../src/application/query/QueryRouter.ts';
+import { ApiController } from '../../../src/infrastructure/http/ApiController.ts';
 import { WebTransformer } from '../../../src/infrastructure/http/WebTransformer.ts';
-import { randomUUID } from 'node:crypto';
+import * as TestCommands from '../../helper/TestCommands.ts';
+import * as TestQueries from '../../helper/TestQueries.ts';
 
-const mockCommand = {
-  type: 'CreateUser' as const,
-  name: 'John Doe',
-  email: 'john@example.com',
+const transactionId = randomUUID();
+const accountId = randomUUID();
+
+const mockCommand = TestCommands.createTransaction(accountId);
+const mockQuery = TestQueries.getAccountTransactions({ accountId });
+const mockTransaction = {
+  id: transactionId,
+  accountId,
+  amount: { amount: 1000, currency: 'EUR' },
+  date: new Date().toISOString(),
+  description: 'Test transaction',
+  metadata: {
+    merchantName: 'Test Merchant',
+  },
 };
 
-const validUserId = randomUUID();
-
-const mockQuery = {
-  type: 'GetUser' as const,
-  userId: validUserId,
-};
-
-const mockUser = {
-  id: validUserId,
-  name: 'John Doe',
-  email: 'john@example.com',
-};
-
-// Test layers
 const TestCommandRouter = Layer.succeed(
   CommandRouter,
-  (command) => Effect.succeed(command.type === 'CreateUser' ? mockUser : null),
+  () => Effect.succeed(mockTransaction),
 );
 
 const TestQueryRouter = Layer.succeed(
   QueryRouter,
-  (query) => Effect.succeed(query.type === 'GetUser' ? mockUser : null),
-);
-
-const TestLayer = ApiController.Live.pipe(
-  Layer.provide(TestCommandRouter),
-  Layer.provide(TestQueryRouter),
-  Layer.provide(WebTransformer.Live),
+  () => Effect.succeed(mockTransaction),
 );
 
 Deno.test('ApiController', async (t) => {
+  const controller = await ApiController.pipe(
+    Effect.provide(ApiController.Live),
+    Effect.provide(WebTransformer.Live),
+    Effect.provide(TestCommandRouter),
+    Effect.provide(TestQueryRouter),
+    Effect.runPromise,
+  );
+
   await t.step('should handle POST commands successfully', async () => {
-    await Effect.runPromise(
-      Effect.gen(function* (_) {
-        const controller = yield* ApiController;
-        const response = yield* Effect.promise(() => controller(createPostRequest(mockCommand)));
-        const responseData = yield* Effect.promise(() => response.json());
-        assertEquals(response.status, 201);
-        assertEquals(responseData, mockUser);
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
+    const response = await controller(createPostRequest(mockCommand));
+    const responseData = await response.json();
+
+    assertEquals(responseData, mockTransaction);
+    assertEquals(response.status, 201);
+  });
+
+  await t.step('should handle POST commands successfully despasito', async () => {
+    const response = await controller(createPostRequest(mockCommand));
+    const responseData = await response.json();
+
+    assertEquals(responseData, mockTransaction);
+    assertEquals(response.status, 201);
   });
 
   await t.step('should handle GET queries successfully', async () => {
-    await Effect.runPromise(
-      Effect.gen(function* (_) {
-        const controller = yield* ApiController;
-        const response = yield* Effect.promise(() => controller(createGetRequest(mockQuery)));
-        const responseData = yield* Effect.promise(() => response.json());
-        assertEquals(response.status, 200);
-        assertEquals(responseData, mockUser);
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
+    const response = await controller(createGetRequest(mockQuery));
+    const responseData = await response.json();
+
+    assertEquals(responseData, mockTransaction);
+    assertEquals(response.status, 200);
   });
 
   await t.step('should handle invalid command schemas', async () => {
-    await Effect.runPromise(
-      Effect.gen(function* (_) {
-        const controller = yield* ApiController;
-        const response = yield* Effect.promise(() => controller(createPostRequest({
-          type: 'CreateUser',
-          name: '', // Invalid - empty name
-          email: 'invalid', // Invalid email
-        })));
-        const responseData = yield* Effect.promise(() => response.json());
-        assertEquals(response.status, 400);
-        assertEquals(responseData.error, 'Invalid Request');
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
+    const response = await controller(createPostRequest({ type: 'InvalidCommand' }));
+    const responseData = await response.json();
+
+    assertEquals(responseData.error, 'Invalid Request');
+    assertEquals(
+      responseData.detail,
+      `Parse Error: type: expected "CreateTransaction" but was "InvalidCommand"`,
     );
+    assertEquals(response.status, 400);
   });
 
   await t.step('should handle invalid query schemas', async () => {
-    await Effect.runPromise(
-      Effect.gen(function* (_) {
-        const controller = yield* ApiController;
-        const response = yield* Effect.promise(() => controller(createGetRequest({
-          type: 'GetUser',
-          userId: 123, // Invalid - should be string
-        })));
-        const responseData = yield* Effect.promise(() => response.json());
-        assertEquals(response.status, 400);
-        assertEquals(responseData.error, 'Invalid Request');
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
-  });
+    const response = await controller(createGetRequest({ type: 'GetAccountTransactions' }));
+    const responseData = await response.json();
 
-  await t.step('should handle unknown command types', async () => {
-    await Effect.runPromise(
-      Effect.gen(function* (_) {
-        const controller = yield* ApiController;
-        const response = yield* Effect.promise(() => controller(createPostRequest({
-          type: 'UnknownCommand',
-        })));
-        const responseData = yield* Effect.promise(() => response.json());
-        assertEquals(response.status, 400);
-        assertEquals(responseData.error, 'Invalid Request');
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
-    );
+    assertEquals(responseData.error, 'Invalid Request');
+    assertEquals(responseData.detail, 'Parse Error: accountId: expected but was missing');
+    assertEquals(response.status, 400);
   });
 
   await t.step('should handle internal errors', async () => {
-    const ErrorLayer = ApiController.Live.pipe(
-      Layer.provide(Layer.succeed(
-        CommandRouter,
-        () => Effect.fail(new Error('Internal error')),
-      )),
-      Layer.provide(TestQueryRouter),
-      Layer.provide(WebTransformer.Live),
+    const errorController = ApiController.pipe(
+      Effect.provide(ApiController.Live),
+      Effect.provide(Layer.succeed(CommandRouter, () => Effect.fail(new Error('Internal error')))),
+      Effect.provide(TestQueryRouter),
+      Effect.provide(WebTransformer.Live),
+      Effect.runSync,
     );
 
-    await Effect.runPromise(
-      Effect.gen(function* (_) {
-        const controller = yield* ApiController;
-        const response = yield* Effect.promise(() => controller(createPostRequest(mockCommand)));
-        const responseData = yield* Effect.promise(() => response.json());
-        assertEquals(response.status, 500);
-        assertEquals(responseData.error.type, 'ServerError');
-        assertEquals(responseData.error.message, 'Internal error');
-      }).pipe(
-        Effect.provide(ErrorLayer),
-      ),
-    );
+    const response = await errorController(createPostRequest(mockCommand));
+    const responseData = await response.json();
+
+    assertEquals(responseData.error, 'Server Error');
+    assertEquals(responseData.detail, 'Error: Internal error');
+    assertEquals(response.status, 500);
   });
 });
 
-const createPostRequest = (body: unknown): Request => {
-  return new Request('http://test.local', {
+function createPostRequest(body: unknown): Request {
+  return new Request('http://test.local/api', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
-};
+}
 
-const createGetRequest = (params: Record<string, unknown>): Request => {
-  const url = new URL('http://test.local');
+function createGetRequest(params: Record<string, unknown>): Request {
+  const url = new URL('http://test.local/api');
   Object.entries(params).forEach(([key, value]) => {
     url.searchParams.append(key, String(value));
   });
-  
+
   return new Request(url, {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
   });
-};
+}

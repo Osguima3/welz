@@ -1,97 +1,52 @@
-import { assertEquals, assertInstanceOf, assertStringIncludes } from '$std/assert/mod.ts';
-import { randomUUID } from 'node:crypto';
+import { assertInstanceOf, assertStringIncludes } from '$std/assert/mod.ts';
 import { Effect, Layer } from 'effect';
+import { randomUUID } from 'node:crypto';
 import { CommandRouter } from '../../../src/application/command/CommandRouter.ts';
 import { CreateTransaction } from '../../../src/application/command/transaction/CreateTransaction.ts';
-import { CreateUser } from '../../../src/application/command/user/CreateUser.ts';
-import { User } from '../../../src/domain/user/User.ts';
+import { Command } from '../../../src/application/schema/Command.ts';
+import * as TestAggregates from '../../helper/TestAggregates.ts';
+import * as TestCommands from '../../helper/TestCommands.ts';
 
-const validTransaction = {
-  type: 'CreateTransaction' as const,
-  accountId: 'valid-account',
-  amount: {
-    amount: BigInt(1000),
-    currency: 'EUR',
-  },
-  date: new Date(),
-  description: 'Test transaction',
-};
+const invalidAccountId = randomUUID();
+const createCommand = TestCommands.createTransaction();
+const invalidCommand = TestCommands.createTransaction(invalidAccountId);
+
+const mockTransaction = TestAggregates.transaction();
 
 const TestCreateTransaction = Layer.succeed(
   CreateTransaction,
-  () => Effect.succeed({}),
-);
-
-const TestCreateUser = Layer.succeed(
-  CreateUser,
-  (request) => {
-    if (request.name === 'invalid-name') {
-      return Effect.fail(new Error('User (Constructor)'));
+  (command) => {
+    if (command.accountId === invalidAccountId) {
+      return Effect.fail(new Error('Failed to create transaction'));
+    } else {
+      return Effect.succeed(mockTransaction);
     }
-    return Effect.succeed(User.make({
-      id: randomUUID(),
-      name: request.name,
-      createdAt: new Date(),
-      email: request.email,
-    }));
   },
 );
 
-const TestCommandLayer = CommandRouter.Live.pipe(
-  Layer.provide(TestCreateUser),
-  Layer.provide(TestCreateTransaction),
-);
+const validCommands: Command[] = [
+  createCommand,
+];
 
 Deno.test('CommandRouter', async (t) => {
-  await t.step('should route CreateUser command to its handler', async () => {
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const router = yield* CommandRouter;
-        const result = yield* router({
-          type: 'CreateUser',
-          name: 'John Doe',
-          email: 'john.doe@example.com',
-        });
+  const router = await CommandRouter.pipe(
+    Effect.provide(CommandRouter.Live),
+    Effect.provide(TestCreateTransaction),
+    Effect.runPromise,
+  );
 
-        // Assert result is a User
-        assertInstanceOf(result, User);
-        assertEquals((result as User).name, 'John Doe');
-        assertEquals((result as User).email, 'john.doe@example.com');
-      }).pipe(
-        Effect.provide(TestCommandLayer),
-      ),
-    );
-  });
+  for (const command of validCommands) {
+    await t.step(`should route ${command.type} command to its handler`, async () => {
+      const result = await Effect.runPromise(router(command));
 
-  await t.step('should fail when command handler fails', async () => {
-    const error = await Effect.runPromise(
-      Effect.gen(function* () {
-        const router = yield* CommandRouter;
-        return yield* router({
-          type: 'CreateUser',
-          name: 'invalid-name',
-          email: 'test@example.com',
-        });
-      }).pipe(
-        Effect.flip,
-        Effect.provide(TestCommandLayer),
-      ),
-    );
+      assertInstanceOf(result, Object);
+    });
+  }
+
+  await t.step('should fail when command fails', async () => {
+    const error = await Effect.runPromise(router(invalidCommand).pipe(Effect.flip));
 
     assertInstanceOf(error, Error);
-    assertStringIncludes(error.message, 'User (Constructor)');
-  });
-
-  await t.step('should route CreateTransaction command to its handler', async () => {
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const router = yield* CommandRouter;
-        const result = yield* router(validTransaction);
-
-        assertInstanceOf(result, Object);
-      }).pipe(
-        Effect.provide(TestCommandLayer),
-      ),
-    );
+    assertStringIncludes(error.message, 'Failed to create transaction');
   });
 });

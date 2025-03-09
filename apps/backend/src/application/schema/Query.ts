@@ -1,8 +1,10 @@
 import { Schema } from 'effect';
-import { GetUserQuery } from './User.ts';
-import { GetTransactionQuery } from './Transaction.ts';
+import { GetAccountTransactionsQuery } from '../../domain/transaction/queries.ts';
 
-export const QuerySchema = Schema.Union(
-  GetUserQuery,
-  GetTransactionQuery,
+export type Query = typeof Query.Type;
+export const Query = Schema.Union(
+  // GetAccountBalancesQuery,
+  GetAccountTransactionsQuery,
+  // GetNetWorthHistoryQuery,
+  // GetCategorySpendingQuery,
 );

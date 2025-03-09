@@ -1,50 +1,48 @@
 import { assertEquals } from '$std/assert/mod.ts';
 import { Effect } from 'effect';
-import { EventType, type WelzEvent } from '../../../src/application/schema/Event.ts';
+import { EventType, WelzEvent } from '../../../src/application/schema/Event.ts';
+import { Money } from '../../../src/domain/common/Money.ts';
 import { InMemoryEventBus } from '../../../src/infrastructure/eventbus/InMemoryEventBus.ts';
 import { EventBus } from '../../../src/shared/events/EventBus.ts';
 
 const mockEvent: WelzEvent = {
   type: EventType.TRANSACTION_CREATED,
+  metadata: {
+    timestamp: new Date(),
+    correlationId: '123',
+  },
   payload: {
-    transactionId: '123',
+    id: '123',
     accountId: '456',
-    amount: {
-      amount: BigInt(1000),
-      currency: 'EUR',
-    },
+    amount: Money.create(1000, 'EUR'),
     date: new Date(),
     description: 'Test transaction',
   },
-  metadata: {
-    timestamp: new Date().toISOString(),
-  },
 };
 
-const TestLayer = InMemoryEventBus;
-
 Deno.test('InMemoryEventBus', async (t) => {
+  const eventBus = await EventBus.pipe(
+    Effect.provide(InMemoryEventBus),
+    Effect.runPromise,
+  );
+
   await t.step('should successfully publish and consume events', async () => {
     let handlerCalled = false;
     let receivedEvent: WelzEvent | null = null;
 
     await Effect.runPromise(
       Effect.gen(function* () {
-        const bus = yield* EventBus;
-
-        yield* bus.subscribe(EventType.TRANSACTION_CREATED, (event) => {
+        yield* eventBus.subscribe(EventType.TRANSACTION_CREATED, (event) => {
           handlerCalled = true;
           receivedEvent = event;
           return Effect.succeed(undefined);
         });
 
-        yield* bus.publish(mockEvent);
+        yield* eventBus.publish(mockEvent);
 
         assertEquals(handlerCalled, true, 'Event handler should be called');
         assertEquals(receivedEvent, mockEvent);
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
+      }),
     );
   });
 
@@ -53,23 +51,19 @@ Deno.test('InMemoryEventBus', async (t) => {
 
     await Effect.runPromise(
       Effect.gen(function* () {
-        const bus = yield* EventBus;
-
         const handler = () => {
           handlerCallCount++;
           return Effect.succeed(undefined);
         };
 
-        yield* bus.subscribe(EventType.TRANSACTION_CREATED, handler);
-        yield* bus.publish(mockEvent);
+        yield* eventBus.subscribe(EventType.TRANSACTION_CREATED, handler);
+        yield* eventBus.publish(mockEvent);
         assertEquals(handlerCallCount, 1, 'Handler should be called once');
 
-        yield* bus.unsubscribe(EventType.TRANSACTION_CREATED, handler);
-        yield* bus.publish(mockEvent);
+        yield* eventBus.unsubscribe(EventType.TRANSACTION_CREATED, handler);
+        yield* eventBus.publish(mockEvent);
         assertEquals(handlerCallCount, 1, 'Handler should not be called after unsubscribing');
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
+      }),
     );
   });
 
@@ -78,10 +72,8 @@ Deno.test('InMemoryEventBus', async (t) => {
 
     await Effect.runPromise(
       Effect.gen(function* () {
-        const bus = yield* EventBus;
-
         for (const id of ['1', '2', '3']) {
-          yield* bus.subscribe(
+          yield* eventBus.subscribe(
             EventType.TRANSACTION_CREATED,
             () => {
               handlersCalled.push(id);
@@ -90,13 +82,11 @@ Deno.test('InMemoryEventBus', async (t) => {
           );
         }
 
-        yield* bus.publish(mockEvent);
+        yield* eventBus.publish(mockEvent);
 
         assertEquals(handlersCalled.length, 3, 'All handlers should be called');
         assertEquals(handlersCalled, ['1', '2', '3']);
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
+      }),
     );
   });
 
@@ -105,16 +95,12 @@ Deno.test('InMemoryEventBus', async (t) => {
 
     await Effect.runPromise(
       Effect.gen(function* () {
-        const bus = yield* EventBus;
-
-        // Subscribe error-throwing handler
-        yield* bus.subscribe(
+        yield* eventBus.subscribe(
           EventType.TRANSACTION_CREATED,
           () => Effect.fail(new Error('Handler error')),
         );
 
-        // Subscribe success handler
-        yield* bus.subscribe(
+        yield* eventBus.subscribe(
           EventType.TRANSACTION_CREATED,
           () => {
             successHandlerCalled = true;
@@ -122,14 +108,10 @@ Deno.test('InMemoryEventBus', async (t) => {
           },
         );
 
-        // Publish event - should not throw
-        yield* bus.publish(mockEvent);
+        yield* eventBus.publish(mockEvent);
 
-        // Verify success handler was still called
         assertEquals(successHandlerCalled, true, 'Success handler should be called despite error in other handler');
-      }).pipe(
-        Effect.provide(TestLayer),
-      ),
+      }),
     );
   });
 });

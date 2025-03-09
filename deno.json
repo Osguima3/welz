@@ -4,6 +4,7 @@
   "tasks": {
     "start": "deno task start:backend & deno task start:web",
     "backend:migrate": "deno task -c apps/backend/deno.json migrate",
+    "backend:seed": "deno task -c apps/backend/deno.json seed",
     "backend:test": "deno test -A apps/backend",
     "backend:start": "deno task -c apps/backend/deno.json start",
     "web:test": "deno test -A apps/web",

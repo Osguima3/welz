@@ -504,22 +504,52 @@ Create comprehensive API documentation using OpenAPI/Swagger.
 **Priority:** High\
 **Dependencies:** WELZ-006
 
+---
+
+### **[WELZ-016][Integration] Connect frontend and backend for transaction listing**
+
+**Description**\
+Create a minimal working integration between frontend and backend by implementing transaction listing in the main page.
+
+**Details**
+
+- Create HTTP client configuration in frontend
+- Implement GetAccountTransactions API call in frontend
+- Add loading and error states in transaction list component
+- Display mock account transactions in the main page
+- Handle basic error scenarios
+- Add basic retry logic for failed requests
+
+**Acceptance Criteria**
+
+- Frontend successfully calls GetAccountTransactions endpoint
+- Mock account transactions are displayed in the main page
+- Loading states are properly handled
+- Error states are properly handled
+- Data refreshes work correctly
+- Basic error handling is implemented
+
+**Effort:** S\
+**Priority:** High\
+**Dependencies:** WELZ-005, WELZ-006
+
 ## Ticket Prioritization
 
-| Ticket                                                                        | Name                                           | Type           | Effort | Priority | Dependencies                 |
-| ----------------------------------------------------------------------------- | ---------------------------------------------- | -------------- | ------ | -------- | ---------------------------- |
-| [WELZ-001](#welz-001infrastructure-set-up-core-development-environment)       | Set up core development environment            | Infrastructure | M      | High     | None                         |
-| [WELZ-002](#welz-002infrastructure-set-up-testing-infrastructure)             | Set up testing infrastructure                  | Infrastructure | M      | High     | WELZ-001                     |
-| [WELZ-003](#welz-003backend-implement-core-cqrs-and-event-bus-infrastructure) | Implement core CQRS infrastructure             | Backend        | L      | High     | WELZ-001                     |
-| [WELZ-012](#welz-012testing-create-backend-unit-test-suite)                   | Create backend unit test suite                 | Testing        | M      | High     | WELZ-002, WELZ-003           |
-| [WELZ-004](#welz-004backend-create-mock-data-structure-and-static-entities)   | Create mock data structure and static entities | Backend        | S      | High     | WELZ-003                     |
-| [WELZ-007](#welz-007frontend-create-reusable-ui-component-library)            | Create reusable UI component library           | Frontend       | M      | High     | None                         |
-| [WELZ-013](#welz-013testing-create-frontend-unit-test-suite)                  | Create frontend unit test suite                | Testing        | M      | High     | WELZ-002, WELZ-007           |
-| [WELZ-005](#welz-005frontend-implement-dashboard-layout-and-components)       | Implement dashboard layout and components      | Frontend       | M      | High     | WELZ-004                     |
-| [WELZ-006](#welz-006backend-implement-transaction-api-endpoints)              | Implement Transaction API endpoints            | Backend        | L      | High     | WELZ-004                     |
-| [WELZ-008](#welz-008frontend-create-transaction-management-interface)         | Create transaction management interface        | Frontend       | M      | High     | WELZ-006                     |
-| [WELZ-014](#welz-014testing-implement-e2e-test-suite)                         | Implement E2E test suite                       | Testing        | L      | High     | WELZ-002, WELZ-005, WELZ-008 |
-| [WELZ-009](#welz-009backend-implement-basic-analytics-endpoints)              | Implement basic analytics endpoints            | Backend        | M      | Mid      | WELZ-006                     |
-| [WELZ-010](#welz-010frontend-create-insights-dashboard)                       | Create insights dashboard                      | Frontend       | M      | Mid      | WELZ-009                     |
-| [WELZ-011](#welz-011backend-implement-basic-insights-endpoints)               | Implement basic insights endpoints             | Backend        | M      | High     | WELZ-006                     |
-| [WELZ-015](#welz-015documentation-create-openapi-documentation)               | Create OpenAPI documentation                   | Documentation  | S      | High     | WELZ-006                     |
+| Ticket                                                                                | Name                                                 | Type           | Effort | Priority | Dependencies                 |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------- | ------ | -------- | ---------------------------- |
+| [WELZ-001](#welz-001infrastructure-set-up-core-development-environment)               | Set up core development environment                  | Infrastructure | M      | High     | None                         |
+| [WELZ-002](#welz-002infrastructure-set-up-testing-infrastructure)                     | Set up testing infrastructure                        | Infrastructure | M      | High     | WELZ-001                     |
+| [WELZ-003](#welz-003backend-implement-core-cqrs-and-event-bus-infrastructure)         | Implement core CQRS infrastructure                   | Backend        | L      | High     | WELZ-001                     |
+| [WELZ-012](#welz-012testing-create-backend-unit-test-suite)                           | Create backend unit test suite                       | Testing        | M      | High     | WELZ-002, WELZ-003           |
+| [WELZ-004](#welz-004backend-create-mock-data-structure-and-static-entities)           | Create mock data structure and static entities       | Backend        | S      | High     | WELZ-003                     |
+| [WELZ-007](#welz-007frontend-create-reusable-ui-component-library)                    | Create reusable UI component library                 | Frontend       | M      | High     | None                         |
+| [WELZ-013](#welz-013testing-create-frontend-unit-test-suite)                          | Create frontend unit test suite                      | Testing        | M      | High     | WELZ-002, WELZ-007           |
+| [WELZ-005](#welz-005frontend-implement-dashboard-layout-and-components)               | Implement dashboard layout and components            | Frontend       | M      | High     | WELZ-004                     |
+| [WELZ-006](#welz-006backend-implement-transaction-api-endpoints)                      | Implement Transaction API endpoints                  | Backend        | L      | High     | WELZ-004                     |
+| [WELZ-016](#welz-016integration-connect-frontend-and-backend-for-transaction-listing) | Connect frontend and backend for transaction listing | Integration    | S      | High     | WELZ-005, WELZ-006           |
+| [WELZ-008](#welz-008frontend-create-transaction-management-interface)                 | Create transaction management interface              | Frontend       | M      | High     | WELZ-006, WELZ-016           |
+| [WELZ-014](#welz-014testing-implement-e2e-test-suite)                                 | Implement E2E test suite                             | Testing        | L      | High     | WELZ-002, WELZ-008, WELZ-016 |
+| [WELZ-009](#welz-009backend-implement-basic-analytics-endpoints)                      | Implement basic analytics endpoints                  | Backend        | M      | Mid      | WELZ-006                     |
+| [WELZ-010](#welz-010frontend-create-insights-dashboard)                               | Create insights dashboard                            | Frontend       | M      | Mid      | WELZ-009, WELZ-016           |
+| [WELZ-011](#welz-011backend-implement-basic-insights-endpoints)                       | Implement basic insights endpoints                   | Backend        | M      | High     | WELZ-006                     |
+| [WELZ-015](#welz-015documentation-create-openapi-documentation)                       | Create OpenAPI documentation                         | Documentation  | S      | High     | WELZ-006                     |

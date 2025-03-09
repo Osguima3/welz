@@ -1,50 +1,36 @@
-import { Context, Effect, Layer, Schema } from 'effect';
-import { randomUUID } from 'node:crypto';
+import { Context, Effect, Layer } from 'effect';
+import { CreateTransactionCommand } from '../../../domain/transaction/commands.ts';
+import { TransactionAggregate } from '../../../domain/transaction/Transaction.ts';
+import { TransactionRepository } from '../../../domain/transaction/TransactionRepository.ts';
 import { EventType } from '../../schema/Event.ts';
-import { CreateTransactionCommand } from '../../schema/Transaction.ts';
 import { EventPublisher } from '../EventPublisher.ts';
-import { TransactionBoundary } from '../TransactionBoundary.ts';
+import { TransactionManager } from '../TransactionManager.ts';
 
 export class CreateTransaction extends Context.Tag('CreateTransaction')<
   CreateTransaction,
-  (request: Schema.Schema.Type<typeof CreateTransactionCommand>) => Effect.Effect<unknown, Error>
+  (request: CreateTransactionCommand) => Effect.Effect<TransactionAggregate, Error>
 >() {
   static Live = Layer.effect(
     CreateTransaction,
     Effect.gen(function* () {
-      const transactionBoundary = yield* TransactionBoundary;
+      const transactionManager = yield* TransactionManager;
+      const repository = yield* TransactionRepository;
       const eventPublisher = yield* EventPublisher;
 
       return (request) =>
-        Effect.gen(function* () {
-          return yield* transactionBoundary(() =>
-            Effect.gen(function* () {
-              const transaction = {
-                id: randomUUID(),
-                ...request,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              };
+        transactionManager(() =>
+          Effect.gen(function* () {
+            const transaction = yield* TransactionAggregate.create(request);
+            const saved = yield* repository.save(transaction);
 
-              yield* eventPublisher.publish({
-                type: EventType.TRANSACTION_CREATED,
-                payload: {
-                  transactionId: transaction.id,
-                  accountId: transaction.accountId,
-                  amount: transaction.amount,
-                  date: transaction.date,
-                  description: transaction.description,
-                  category: transaction.category,
-                },
-                metadata: {
-                  timestamp: new Date().toISOString(),
-                },
-              });
+            yield* eventPublisher.publish({
+              type: EventType.TRANSACTION_CREATED,
+              payload: saved,
+            });
 
-              return transaction;
-            })
-          );
-        });
+            return saved;
+          })
+        );
     }),
   );
 }

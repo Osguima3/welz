@@ -1,29 +1,43 @@
-import { Effect, Layer } from 'effect';
-import { ApiController } from '../../src/infrastructure/http/ApiController.ts';
-
 export interface ServerConfig {
   port?: number;
 }
 
-export interface ServerInfo {
-  server: ReturnType<typeof Deno.serve>;
-  baseUrl: string;
+export interface TestServer {
+  fetchResponse(method: 'POST' | 'GET', data: unknown): Promise<Response>;
+  shutdown(): void;
 }
 
-export async function createTestServer(
-  layer: Layer.Layer<ApiController>,
+export function createTestServer(
+  controller: (req: Request) => Promise<Response>,
   config: ServerConfig = {},
-): Promise<ServerInfo> {
+): Promise<TestServer> {
   const port = config.port ?? 9000;
-  const baseUrl = `http://localhost:${port}`;
 
-  const api = await Effect.runPromise(
-    Effect.gen(function* () {
-      return yield* ApiController;
-    }).pipe(Effect.provide(layer)),
-  );
+  const server = Deno.serve({ port }, controller);
 
-  const server = Deno.serve({ port }, api);
+  return Promise.resolve({
+    async fetchResponse(method: 'POST' | 'GET', data: unknown) {
+      const url = new URL(`http://localhost:${port}/api`);
+      const requestInit: RequestInit = {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+      };
 
-  return { server, baseUrl };
+      if (method === 'GET') {
+        // For GET requests, convert data to URL search params
+        Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
+          url.searchParams.append(key, String(value));
+        });
+      } else {
+        // For POST requests, send data in body
+        requestInit.body = JSON.stringify(data);
+      }
+
+      return await fetch(url, requestInit);
+    },
+
+    shutdown() {
+      server.shutdown();
+    },
+  });
 }
