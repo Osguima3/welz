@@ -73,7 +73,7 @@ Deno.test('ApiController integration', async (t) => {
 
     const error = await response.json();
     assertEquals(error.error, 'Invalid Request');
-    assertEquals(error.detail, 'Parse Error: accountId: expected but was missing');
+    assertEquals(error.detail, 'Parse Error: accountId: expected readonly accountId: UUID but was missing');
     assertEquals(response.status, 400);
   });
 
@@ -84,7 +84,7 @@ Deno.test('ApiController integration', async (t) => {
 
     assertEquals(response.status, 400);
     assertEquals(error.error, 'Invalid Request');
-    assertEquals(error.detail, 'Parse Error: accountId: expected but was missing');
+    assertEquals(error.detail, 'Parse Error: accountId: expected readonly accountId: UUID but was missing');
   });
 
   await t.step('cleanup', async () => {

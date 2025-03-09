@@ -1,12 +1,13 @@
 import { assertEquals } from '$std/assert/mod.ts';
-import { Cause, Effect, FiberId, ParseResult, SchemaAST } from 'effect';
+import { Cause, Effect, FiberId, Option, ParseResult, SchemaAST } from 'effect';
 import { Money } from '../../../src/domain/common/Money.ts';
 import { WebTransformer } from '../../../src/infrastructure/http/WebTransformer.ts';
 
-const TestLayer = WebTransformer.Live;
-
 Deno.test('WebTransformer', async (t) => {
-  const transformer = WebTransformer.pipe(Effect.provide(TestLayer), Effect.runSync);
+  const ast = new SchemaAST.Literal('T');
+  const actual = 'actual';
+
+  const transformer = WebTransformer.pipe(Effect.provide(WebTransformer.Live), Effect.runSync);
 
   await t.step('should transform successful command responses', () => {
     const data = { id: '123', name: 'Test' };
@@ -32,27 +33,79 @@ Deno.test('WebTransformer', async (t) => {
     assertEquals(response.body, '{"amount":{"amount":10.5,"currency":"EUR"}}');
   });
 
-  await t.step('should transform parse errors as 400 Bad Request', () => {
-    const issue = new ParseResult.Missing(new SchemaAST.Type(new SchemaAST.Literal('Type')));
+  await t.step('should transform missing parse errors as 400 Bad Request', () => {
+    const issue = new ParseResult.Missing(new SchemaAST.Type(ast));
     const error = new ParseResult.ParseError({ issue });
     const response = Effect.runSync(transformer.transformError(Cause.fail(error)));
 
     assertEquals(response.status, 400);
     assertEquals(
       response.body,
-      '{"code":201,"detail":"Parse Error: expected but was missing","error":"Invalid Request","issue":{"_id":"ParseError","message":"is missing"}}',
+      '{"code":200,"detail":"Parse Error: expected \\"T\\" but was missing","error":"Invalid Request","issue":{"_id":"ParseError","message":"is missing"}}',
     );
   });
 
   await t.step('should transform other parse errors as 400 Bad Request', () => {
-    const issue = new ParseResult.Unexpected('', 'Invalid input');
+    const issue = new ParseResult.Refinement(
+      new SchemaAST.Refinement(ast, Option.none),
+      actual,
+      'From',
+      new ParseResult.Unexpected(actual, 'Invalid input'),
+    );
     const error = new ParseResult.ParseError({ issue });
     const response = Effect.runSync(transformer.transformError(Cause.fail(error)));
 
     assertEquals(response.status, 400);
     assertEquals(
       response.body,
-      '{"code":299,"detail":"Parse Error: Unexpected: Invalid input","error":"Invalid Request","issue":{"_id":"ParseError","message":"Invalid input"}}',
+      '{"code":201,"detail":"Parse Error: expected { \\"T\\" | filter } but was \\"actual\\"","error":"Invalid Request","issue":{"_id":"ParseError","message":"{ \\"T\\" | filter }\\n└─ From side refinement failure\\n   └─ Invalid input"}}',
+    );
+  });
+
+  await t.step('should transform parse errors with message as 400 Bad Request', () => {
+    const issue = new ParseResult.Unexpected('actual', 'Invalid input');
+    const error = new ParseResult.ParseError({ issue });
+    const response = Effect.runSync(transformer.transformError(Cause.fail(error)));
+
+    assertEquals(response.status, 400);
+    assertEquals(
+      response.body,
+      '{"code":202,"detail":"Parse Error: Unexpected: Invalid input, was \\"actual\\"","error":"Invalid Request","issue":{"_id":"ParseError","message":"Invalid input"}}',
+    );
+  });
+
+  await t.step('should transform composite parse errors as 400 Bad Request', () => {
+    const issue = new ParseResult.Composite(
+      ast,
+      actual,
+      new ParseResult.Missing(new SchemaAST.Type(ast)),
+    );
+    const error = new ParseResult.ParseError({ issue });
+    const response = Effect.runSync(transformer.transformError(Cause.fail(error)));
+
+    assertEquals(response.status, 400);
+    assertEquals(
+      response.body,
+      '{"code":200,"detail":"Parse Error: expected \\"T\\" but was missing","error":"Invalid Request","issue":{"_id":"ParseError","message":"\\"T\\"\\n└─ is missing"}}',
+    );
+  });
+
+  await t.step('should transform composite parse errors as 400 Bad Request', () => {
+    const issue = new ParseResult.Composite(
+      ast,
+      actual,
+      [
+        new ParseResult.Missing(new SchemaAST.Type(ast)),
+        new ParseResult.Unexpected('actual', 'Invalid input'),
+      ],
+    );
+    const error = new ParseResult.ParseError({ issue });
+    const response = Effect.runSync(transformer.transformError(Cause.fail(error)));
+
+    assertEquals(response.status, 400);
+    assertEquals(
+      response.body,
+      '{"code":200,"detail":"Parse Error: expected \\"T\\" but was missing","error":"Invalid Request","issue":{"_id":"ParseError","message":"\\"T\\"\\n├─ is missing\\n└─ Invalid input"}}',
     );
   });
 

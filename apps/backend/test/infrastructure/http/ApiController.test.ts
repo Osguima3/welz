@@ -84,7 +84,7 @@ Deno.test('ApiController', async (t) => {
     const responseData = await response.json();
 
     assertEquals(responseData.error, 'Invalid Request');
-    assertEquals(responseData.detail, 'Parse Error: accountId: expected but was missing');
+    assertEquals(responseData.detail, 'Parse Error: accountId: expected readonly accountId: UUID but was missing');
     assertEquals(response.status, 400);
   });
 

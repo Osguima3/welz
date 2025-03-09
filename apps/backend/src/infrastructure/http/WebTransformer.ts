@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { Cause, Context, Effect, Layer, Match, ParseResult } from 'effect';
+import { Array, Cause, Context, Effect, Layer, Match, ParseResult } from 'effect';
 
 export interface WebResponse {
   body: string;
@@ -72,21 +72,44 @@ function handleParseError(error: ParseResult.ParseError): ErrorData {
   };
 }
 
+/**
+ * Type: 201
+ * Missing: 200
+ * Unexpected: 202
+ * Forbidden: 201
+ * Pointer: recursive
+ * Refinement: 201
+ * Transformation:
+ * Composite: recursive
+ */
 function handleParseIssue(issue: ParseResult.ParseIssue, prefix: string = ''): ErrorData {
   return Match.value(issue).pipe(
-    Match.tag('Pointer', (pointer) => handleParseIssue(pointer.issue, `${prefix}${pointer.path.toString()}: `)),
-    Match.tag('Composite', (compositeIssue) => handleCompositeError(compositeIssue, prefix)),
-    Match.tag('Type', (type) => ({ code: 200, detail: `${prefix}expected ${type.ast} but was "${type.actual}"` })),
-    Match.tag('Missing', () => ({ code: 201, detail: `${prefix}expected but was missing` })),
-    Match.orElse((issue) => ({ code: 299, detail: `${prefix}${issue._tag}: ${issue.message}` })),
+    Match.tag('Pointer', (err) => handleParseIssue(err.issue, `${prefix}${err.path.toString()}: `)),
+    Match.tag('Composite', (err) => handleCompositeError(err, prefix)),
+    Match.tag('Missing', (err) => ({ code: 200, detail: `${prefix}expected ${err.ast} but was missing` })),
+    Match.when(
+      { ast: Match.any },
+      (err) => ({ code: 201, detail: `${prefix}expected ${err.ast} but was "${issue.actual}"` }),
+    ),
+    Match.when(
+      { message: Match.string },
+      (err) => ({ code: 202, detail: `${prefix}${issue._tag}: ${err.message}, was "${issue.actual}"` }),
+    ),
+    Match.orElse(() => ({ code: 299, detail: `${prefix}${issue._tag}: was "${issue.actual}"` })),
   );
 }
 
 function handleCompositeError(issue: ParseResult.Composite, prefix: string = ''): ErrorData {
   const issues = issue.issues as ParseResult.SingleOrNonEmpty<ParseResult.ParseIssue>;
   return Match.value(issues).pipe(
-    Match.when(Array.isArray, (arr) => handleParseIssue(arr[0], prefix)),
-    Match.orElse((single) => handleParseIssue(single, prefix)),
+    Match.withReturnType<ErrorData>(),
+    Match.when(
+      (err: ParseResult.SingleOrNonEmpty<ParseResult.ParseIssue>) => '_tag' in err,
+      (single) => handleParseIssue(single, prefix),
+    ),
+    Match.orElse(
+      (array: Array.NonEmptyReadonlyArray<ParseResult.ParseIssue>) => handleParseIssue(array[0], prefix),
+    ),
   );
 }
 

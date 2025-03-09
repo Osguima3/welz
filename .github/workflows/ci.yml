@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - ai4devs
   pull_request:
     branches:
       - main
@@ -25,7 +24,7 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: v2.2.2
 
       - name: Cache Dependencies
         uses: actions/cache@v4
@@ -44,7 +43,7 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.1.x
+          deno-version: v2.2.2
 
       - name: Restore Dependencies
         uses: actions/cache@v4
@@ -71,7 +70,7 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.1.x
+          deno-version: v2.2.2
 
       - name: Restore Dependencies
         uses: actions/cache@v4
@@ -95,9 +94,10 @@ jobs:
         run: deno task coverage
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          file: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
           fail_ci_if_error: true
 
       - name: Stop database
