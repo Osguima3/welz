@@ -1,0 +1,15 @@
+{
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
+    "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
+    "manifest": "deno task cli manifest $(pwd)",
+    "start": "deno run -A --watch=src/ src/main.ts",
+    "build": "deno run -A src/main.ts build",
+    "update": "deno run -A -r https://fresh.deno.dev/update .",
+    "migrate": "deno run -A --import-map=../../import_map.json https://deno.land/x/nessie/cli.ts migrate -c ./db/nessie.config.ts",
+    "seed": "deno run -A --import-map=../../import_map.json https://deno.land/x/nessie/cli.ts seed -c ./db/nessie.config.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "deno.unstable"]
+  }
+}

@@ -1,6 +1,7 @@
 # Domain Model
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Aggregates](#aggregates)
 - [Commands](#commands)
@@ -10,7 +11,9 @@
 - [Value Objects](#value-objects)
 
 ## Overview
+
 This document provides a comprehensive view of our domain model following DDD principles and CQRS patterns, including:
+
 - Aggregates and their behaviors
 - Commands that can be executed
 - Events that can be emitted
@@ -21,6 +24,7 @@ This document provides a comprehensive view of our domain model following DDD pr
 ## Aggregates
 
 ### Account Aggregate
+
 - **Root**: `Account`
 - **Value Objects**: `Money`, `Currency`
 - **Commands**:
@@ -35,8 +39,9 @@ This document provides a comprehensive view of our domain model following DDD pr
   - `AccountBalanceUpdated`
 
 ### Transaction Aggregate
+
 - **Root**: `Transaction`
-- **Value Objects**: `Money`, `TransactionMetadata`
+- **Value Objects**: `Money`
 - **Commands**:
   ```typescript
   interface CreateTransactionCommand {
@@ -45,9 +50,8 @@ This document provides a comprehensive view of our domain model following DDD pr
     date: Date;
     description?: string;
     category?: string;
-    metadata?: TransactionMetadata;
   }
-  
+
   interface CategorizeTransactionCommand {
     transactionId: string;
     categoryId: string;
@@ -60,6 +64,7 @@ This document provides a comprehensive view of our domain model following DDD pr
   - `TransactionDeleted`
 
 ### Category Aggregate
+
 - **Root**: `Category`
 - **Value Objects**: None
 - **Commands**:
@@ -74,6 +79,7 @@ This document provides a comprehensive view of our domain model following DDD pr
   - `CategoryUpdated`
 
 ## Commands
+
 ```typescript
 interface UpdateBalanceCommand {
   accountId: string;
@@ -98,6 +104,7 @@ interface CategorizeTransactionCommand {
 ## Events
 
 ### TransactionCreated
+
 - **Publisher**: Command Module
 - **Subscribers**: Query Module, Financial Insights Module
 - **Description**: Emitted when a new transaction is received from a bank or manually created by a user
@@ -112,6 +119,7 @@ interface CategorizeTransactionCommand {
   ```
 
 ### TransactionUpdated
+
 - **Publisher**: Command Module
 - **Subscribers**: Query Module, Financial Insights Module
 - **Description**: Emitted when transaction details (amount, date, description) are modified
@@ -126,6 +134,7 @@ interface CategorizeTransactionCommand {
   ```
 
 ### TransactionDeleted
+
 - **Publisher**: Command Module
 - **Subscribers**: Query Module, Financial Insights Module
 - **Description**: Emitted when a transaction is marked as deleted (soft delete)
@@ -139,6 +148,7 @@ interface CategorizeTransactionCommand {
   ```
 
 ### TransactionCategorized
+
 - **Publisher**: Command Module
 - **Subscribers**: Query Module, Financial Insights Module, Categorization Module
 - **Description**: Emitted when a transaction receives a category, either automatically by AI or manually by the user
@@ -157,6 +167,7 @@ interface CategorizeTransactionCommand {
 ## Queries
 
 ### Account Queries
+
 ```typescript
 interface GetAccountBalancesQuery {
   currency?: string;
@@ -172,6 +183,7 @@ interface GetAccountTransactionsQuery {
 ```
 
 ### Analytics Queries
+
 ```typescript
 interface GetNetWorthHistoryQuery {
   timeframe: 'week' | 'month' | 'year';
@@ -186,6 +198,7 @@ interface GetCategorySpendingQuery {
 ## Read Models
 
 ### AccountReadModel
+
 ```typescript
 interface AccountReadModel {
   accountId: string;
@@ -197,6 +210,7 @@ interface AccountReadModel {
 ```
 
 ### TransactionReadModel
+
 ```typescript
 interface TransactionReadModel {
   transactionId: string;
@@ -206,11 +220,11 @@ interface TransactionReadModel {
   description: string;
   category: CategoryReadModel;
   merchantName?: string;
-  metadata: TransactionMetadata;
 }
 ```
 
 ### CategoryReadModel
+
 ```typescript
 interface CategoryReadModel {
   categoryId: string;
@@ -222,6 +236,7 @@ interface CategoryReadModel {
 ```
 
 ### FinancialInsightsReadModel
+
 ```typescript
 interface FinancialInsightsReadModel {
   netWorth: Money;
@@ -241,11 +256,12 @@ interface FinancialInsightsReadModel {
 ## Value Objects
 
 ### Money
+
 ```typescript
 interface Money {
   amount: bigint;
   currency: Currency;
-  
+
   add(other: Money): Money;
   subtract(other: Money): Money;
   multiply(factor: number): Money;
@@ -253,23 +269,15 @@ interface Money {
 }
 ```
 
-### TransactionMetadata
-```typescript
-interface TransactionMetadata {
-  description: string;
-  merchantName?: string;
-  reference?: string;
-}
-```
-
 ### DateRange
+
 ```typescript
 interface DateRange {
   start: Date;
   end: Date;
-  
+
   contains(date: Date): boolean;
   overlaps(other: DateRange): boolean;
   duration(): Duration;
 }
-
+```

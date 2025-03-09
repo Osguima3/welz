@@ -1,0 +1,47 @@
+# Node modules
+node_modules/
+
+# Deno cache directory (if you use one)
+.deno/
+
+# Deno generated files
+deno.lock
+
+# VS Code settings
+.vscode/
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Build output
+build/
+dist/
+out/
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# System files (Windows)
+Thumbs.db
+Desktop.ini
+
+# Coverage directories
+coverage/
+coverage.lcov
+
+# macOS system files
+.DS_Store
+
+# Fresh build directory
+_fresh/
+
+# npm dependencies
+node_modules/

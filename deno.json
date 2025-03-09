@@ -1,0 +1,43 @@
+{
+  "lock": false,
+  "workspace": ["./apps/backend", "./apps/web"],
+  "tasks": {
+    "start": "deno task start:backend & deno task start:web",
+    "backend:migrate": "deno task -c apps/backend/deno.json migrate",
+    "backend:seed": "deno task -c apps/backend/deno.json seed",
+    "backend:test": "deno test -A apps/backend",
+    "backend:start": "deno task -c apps/backend/deno.json start",
+    "web:test": "deno test -A apps/web",
+    "web:start": "deno task -c apps/web/deno.json start",
+    "test": "deno test -A --clean --coverage=coverage && deno task coverage:clean",
+    "test:pwsh": "deno test -A --clean --coverage=coverage; deno task coverage:clean",
+    "coverage": "deno coverage coverage --lcov --output=coverage/lcov.info",
+    "coverage:report": "deno coverage coverage",
+    "coverage:clean": "deno run -A tools/clean-coverage.ts",
+    "check": "deno check apps/backend apps/web"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": ["recommended/single-import"]
+    }
+  },
+  "fmt": {
+    "singleQuote": true,
+    "semiColons": true,
+    "lineWidth": 120,
+    "indentWidth": 2,
+    "useTabs": false,
+    "proseWrap": "preserve"
+  },
+  "importMap": "./import_map.json"
+}

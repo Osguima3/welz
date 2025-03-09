@@ -1,6 +1,7 @@
 # Architecture
 
 ## Table of Contents
+
 - [Technical Stack](#technical-stack)
   - [Frontend](#frontend)
   - [Backend](#backend)
@@ -31,20 +32,22 @@
 ## Technical Stack
 
 ### Frontend
-- **Web Client**: 
+
+- **Web Client**:
   - Framework: Deno Fresh (Islands Architecture)
   - Language: TypeScript
   - State Management: Effect TS
   - UI Components: Preact with Tailwind CSS
 
 ### Backend
+
 - **Runtime**: Deno
 - **Framework**: Fresh for backend APIs
-- **Core Libraries**: 
+- **Core Libraries**:
   - Effect TS for functional programming and error handling
   - Preact for UI components
   - Tailwind for styling
-- **Database**: 
+- **Database**:
   - PostgreSQL with Effect TS query builders
   - Nessie for database migrations
 
@@ -53,20 +56,21 @@
 ### Domain-Driven Design (DDD)
 
 #### Strategic Design
+
 - **Bounded Contexts**:
   - Financial Accounts
   - Transactions & Categorization
   - Analytics & Insights
 
 #### Tactical Design
+
 - **Aggregates**:
   - Account (root) → Transactions
   - Category (root) → Transaction Categories
-  
+
 - **Value Objects**:
   - Money (amount + currency)
   - DateRange
-  - TransactionMetadata
 
 - **Domain Events**:
   - TransactionCreated
@@ -80,6 +84,7 @@
   - CategoryRepository
 
 ### CQRS Implementation
+
 The system implements a simplified CQRS pattern to achieve:
 
 - Clear separation between write and read operations
@@ -89,46 +94,71 @@ The system implements a simplified CQRS pattern to achieve:
 - Simple in-memory event bus for module communication
 
 #### Event Bus Implementation
+
 - In-memory pub/sub pattern using Effect TS
 - Simple topic-based subscription model
 - Synchronous event processing
 - No event persistence (events are ephemeral)
-- Module-to-module communication only
 
 #### Command Handling
-- Commands represent user intentions
-- Validation before execution
-- Direct persistence to PostgreSQL
-- Success/failure responses
+
+- Resource-based REST endpoints for write operations
+- Effect Schema for validation
+- Transactions through Effect context
+- Events published after successful commands
+- Type-safe command handling
+
+Example Flow:
+
+```
+POST /accounts
+{
+  "name": "Savings",
+  "initialBalance": 1000,
+  "currency": "EUR"
+}
+
+-> CreateAccountCommand
+-> Transaction Boundary
+-> Database Write
+-> Publish AccountCreated Event
+-> Response
+```
 
 #### Query Handling
-- Materialized views for optimized reading
+
+- Resource-based REST endpoints for read operations
+- Materialized views for efficient reads
 - Views are refreshed on relevant domain events
 - Built-in PostgreSQL query optimization
-- No direct table access from query side
 
 ### SOLID Principles
 
 #### Single Responsibility Principle (SRP)
+
 - Each module has one reason to change
 - Clear separation between command and query responsibilities
 - Dedicated services for specific domain operations
 
 #### Open/Closed Principle (OCP)
+
 - Extensible command/query handlers
 - Plugin-based provider architecture for financial institutions
 - Category rules system supports custom rules
 
 #### Liskov Substitution Principle (LSP)
+
 - Abstract financial provider interfaces
 - Interchangeable storage implementations
 
 #### Interface Segregation Principle (ISP)
+
 - Specific command/query interfaces
 - Targeted repository interfaces
 - Granular service contracts
 
 #### Dependency Inversion Principle (DIP)
+
 - Core domain logic depends on abstractions
 - Infrastructure implementations injected at runtime
 - Effect TS for functional dependencies
@@ -136,12 +166,14 @@ The system implements a simplified CQRS pattern to achieve:
 ### DRY (Don't Repeat Yourself)
 
 #### Code Reuse Strategy
+
 - Shared domain models across bounded contexts
 - Common validation rules
 - Reusable UI components
 - Shared test utilities
 
 #### Infrastructure Patterns
+
 - Generic repository implementations
 - Common error handling
 - Unified logging approach
@@ -150,12 +182,14 @@ The system implements a simplified CQRS pattern to achieve:
 ### Clean Code Principles
 
 #### Naming Conventions
+
 - **Intention-Revealing Names**
   - Commands: `CreateTransactionCommand`, `UpdateBudgetCommand`
   - Queries: `GetTransactionsByDateQuery`, `GetNetWorthQuery`
   - Services: `TransactionNormalizationService`, `CategoryPredictionService`
 
 #### Function Design
+
 - **Small and Focused**
   - Each function does one thing
   - Maximum 20 lines per function
@@ -163,6 +197,7 @@ The system implements a simplified CQRS pattern to achieve:
   - Early returns for validation
 
 #### Code Organization
+
 - **Consistent File Structure**
   - Separate commands and queries
   - Group related domain logic
@@ -170,6 +205,7 @@ The system implements a simplified CQRS pattern to achieve:
   - Clear dependency hierarchy
 
 #### Error Handling
+
 - **Functional Error Management**
   - Effect TS for error handling
   - Clear error hierarchies
@@ -177,6 +213,7 @@ The system implements a simplified CQRS pattern to achieve:
   - Proper error logging
 
 #### Testing Approach
+
 - **Test-First Development**
   - Unit tests for business logic
   - Integration tests for workflows
@@ -184,6 +221,7 @@ The system implements a simplified CQRS pattern to achieve:
   - Clear test naming and structure
 
 #### Comments and Documentation
+
 - **Self-Documenting Code**
   - Clear function and variable names
   - Documented public APIs
@@ -193,16 +231,20 @@ The system implements a simplified CQRS pattern to achieve:
 ## High-Level Design
 
 ### System Overview
+
 The **Welz** platform consists of:
+
 1. **Frontend Application** – A web-based client using Fresh/Preact
 2. **Backend System** – A monolithic service handling data management, categorization, and basic insights
 
 ### Core Components & Interactions
 
 #### Frontend Application
+
 - **Web Client**: Responsive web application built with Fresh
 
 #### Backend Core Components
+
 - **API Gateway**: Entry point for all client requests
 - **Command Module**: Handles write operations
 - **Query Module**: Handles read operations
@@ -215,6 +257,7 @@ The **Welz** platform consists of:
 The infrastructure is designed to support both local development and future cloud deployment:
 
 ### CI/CD Pipeline
+
 - **GitHub Actions** for continuous integration:
   - Runs tests (unit, integration)
   - Checks code formatting
@@ -222,22 +265,25 @@ The infrastructure is designed to support both local development and future clou
   - Runs security scans
 
 ### Development Environment
+
 - **Docker Compose** setup with PostgreSQL container
 
 ### Monitoring & Logging
+
 - Basic logging with correlation IDs
 - Error tracking
 
 ## Deployment Model
 
 ### Local Development
+
 1. **Docker Compose** setup for local development
    ```yaml
    services:
      app:
        build: .
        ports:
-         - "8000:8000"
+         - '8000:8000'
        volumes:
          - .:/app
      db:
@@ -251,6 +297,7 @@ The infrastructure is designed to support both local development and future clou
    - Database migrations run automatically
 
 ### Production Deployment
+
 1. **Containerization**
    - Single Docker image for backend
    - Environment-specific configurations
@@ -263,21 +310,25 @@ The infrastructure is designed to support both local development and future clou
 ## Security Considerations
 
 ### Data Protection
+
 - **Encryption**
   - Data at rest encryption for databases
   - TLS 1.3 for all communications
 
 ### Authentication & Authorization
+
 - **Session Management**
   - Basic session handling
   - Simple JWT tokens
 
 ### Audit & Compliance
+
 - **Logging**
   - Security event logging
   - Access logs
 
 ### Financial Data Security
+
 - **PSD2 Requirements**
   - Basic authentication
   - HTTPS encryption
@@ -285,6 +336,7 @@ The infrastructure is designed to support both local development and future clou
 ## C4 diagrams
 
 ### Context Diagram
+
 ```plantuml
 @startuml
 package "Welz Platform" {
@@ -300,6 +352,7 @@ User --> [Web Client] : Uses
 ```
 
 ### Container Diagram
+
 ```plantuml
 @startuml
 actor "User"
@@ -336,35 +389,39 @@ User --> [Web Client]
 ```
 
 **API Gateway**
+
 - Single entry point for all API requests
-- Handles request routing, validation, and authentication
+- Handles request routing, validation and authentication
 - Manages API versioning and documentation
-- Implements rate limiting and request throttling
 - Routes requests to Command or Query modules based on operation type
 
 **Command Module**
+
 - Processes write commands from external and internal sources
-- Enforce domain rules and maintain data consistency
-- Directly persists changes to PostgreSQL
-- Handle idempotency and retries
+- Schema-based command validation
+- Effect-based error handling and transactions
 
 **Query Module**
+
 - Handles all read operations
 - Implements caching strategies
 - Uses read replicas for better performance
 - Subscribes to relevant events to invalidate caches
 
 **Categorization Module**
+
 - Automatically categorizes transactions based on past behavior
 - Allows users to change transaction categories providing reinforcement to categorization accuracy
 - Stores categorized transactions in the Database
 
 **Financial Insights Module**
+
 - Computes real-time net worth based on assets and liabilities
 - Generates financial reports
 - Stores financial metrics in the Database
 
 **Database**
+
 - PostgreSQL for relational data storage
 - Ensures efficient and structured data access
 
@@ -372,24 +429,27 @@ User --> [Web Client]
 
 ### API Gateway Module
 
-The API Gateway Module serves as the unified entry point for all external requests, with client-specific response transformation for web and mobile clients.
+The API Gateway Module serves as the entry point for all API requests, utilizing a unified endpoint to process commands and queries.
 
 #### Core Responsibilities:
-- Process all incoming requests
-- Route requests to Command or Query modules
+
+- Handle RESTful HTTP requests through a unified endpoint
+- Basic request validation and authentication
+- Transform REST operations into domain commands and queries
 - Provide unified error handling and logging
-- Monitor API health and metrics
+- Manage response formatting
+- API documentation and versioning
 
 #### Component Diagram:
+
 ```plantuml
 @startuml
 [Web Client]
 
 package "API Gateway" {
-    [Request Handler]
-    [Route Resolver]
+    [API Controller]
     [Web Transformer]
-    [API Documentation]
+    [OpenAPI Documentation]
 }
 
 package "Backend Modules" {
@@ -397,119 +457,210 @@ package "Backend Modules" {
     [Query Module]
 }
 
-[Web Client] --> [Request Handler]
-[Request Handler] --> [Route Resolver]
-[Route Resolver] --> [Command Module] : Write ops
-[Route Resolver] --> [Query Module] : Read ops
-[Command Module] --> [Request Handler]
-[Query Module] --> [Request Handler]
-[Request Handler] -left-> [Web Transformer] : Transform Response
-
-[Web Transformer] -[hidden]down-> [API Documentation]
+[Web Client] -down-> [API Controller]
+[API Controller] --> [Command Module] : Write Operations
+[API Controller] --> [Query Module] : Read Operations
+[Command Module] -up-> [Web Transformer]
+[Query Module] -up-> [Web Transformer]
+[Web Transformer] -left-> [API Controller] : Web Response
+[OpenAPI Documentation] -right.-> [API Controller] : Documents
 
 @enduml
 ```
 
 #### **Component Details:**
 
-**Request Handler**
-- Unified entry point for all HTTP requests
-- Client type detection and routing
-- Request lifecycle management
-- Circuit breaking for downstream services
-- Response transformer selection
+**API Controller**
 
-**Route Resolver**
-- Command/Query operation routing
-- Unified timeout policies
-- Core business logic routing
+- Single endpoint for all command and query operations
+- Uses HTTP methods to differentiate between operations:
+  - POST: Commands (write operations)
+  - GET: Queries (read operations)
+- Routes based on the operation type
+- Error handling and responses
+- Transforms REST requests into domain commands or queries
+- Request validation through Effect Schema
 
 **Web Transformer**
-- Web-specific response formats
-- Desktop browser optimizations
-- Web-specific caching strategies
 
-**API Documentation**  
+- Maps domain results to web-specific responses
+- Handles error transformation
+- Applies response formatting (e.g., pagination)
+- Manages content negotiation
+- Ensures consistent response structure
+
+**API Documentation**
+
 - Complete OpenAPI endpoint documentation
 - Request/response schemas
 - Example payloads
 - Error responses
 - Interactive Swagger UI for testing
 
+#### Command Flow Example:
+
+```http
+POST /api
+Content-Type: application/json
+
+{
+  "type": "CreateAccount",
+  "name": "Savings",
+  "initialBalance": 1000,
+  "currency": "EUR"
+}
+```
+
+Response:
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+  "id": "uuid-123",
+  "name": "Savings",
+  "currency": "EUR"
+}
+```
+
+#### Query Flow Example:
+
+```http
+GET /api?type=GetAccountTransactions&accountId=123&fromDate=2023-01-01&toDate=2023-01-31
+```
+
+Response:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "transactions": [
+    {
+      "id": "tx-1",
+      "amount": 45.99,
+      "date": "2023-01-15T10:30:00Z",
+      "description": "Grocery Store"
+    },
+    // ...more transactions
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 10,
+    "totalItems": 24
+  }
+}
+```
+
 ### Command Module
 
-The Command Module handles all write operations in the system, serving as the single entry point for both API and internal commands from domain modules.
+The Command Module processes all write operations providing transaction boundaries.
 
 #### **Core Responsibilities:**
-- Process write commands from external and internal sources
-- Enforce domain rules and maintain data consistency
-- Persist changes to PostgreSQL
-- Handle idempotency and retries
+
+- Process write commands using discriminated unions for type safety
+- Schema-based command validation
+- Transaction management through Effect context
+- Event publishing after successful execution
 
 #### **Component Diagram:**
+
 ```plantuml
 @startuml
 package "Command Module" {
-    [Command Handler]
-    [Command Validator]
     [Command Router]
+    [Command Handlers]
     [Transaction Boundary]
-    [Idempotency Manager]
+    [Event Publisher]
     database "PostgreSQL"
 }
 
-[API Gateway] --> [Command Handler] : User Commands
+queue "Event Bus"
 
-[Command Handler] --> [Command Validator] : Validate
-[Command Handler] -left-> [Idempotency Manager] : Check
-[Command Handler] --> [Command Router] : Route Command
-
-[Command Router] --> [Domain Services] : Domain Commands
-[Command Router] --> [Transaction Boundary] : Begin/Commit
-[Transaction Boundary] --> [PostgreSQL] : Persist
+[API Gateway] --> [Command Router] : User Commands
+[Command Router] --> [Command Handlers] : Route commands
+[Command Handlers] -left-> [Transaction Manager] : Transaction\nContext
+[Transaction Manager] -down-> [PostgreSQL] : Persist Changes
+[Command Handlers] -down--> [Domain Services] : Call domain services
+[Command Handlers] -up-> [Event Publisher] : On Success
+[Event Publisher] -up-> [Event Bus] : Publish Events
 @enduml
 ```
 
 #### Component Details:
 
-**Command Handler**
-- Processes incoming commands
-- Orchestrates validation and execution
-- Returns command results
-- Handles errors and rollbacks
-
-**Command Validator**
-- Validates command structure and data
-- Checks business rules and constraints
-- Validates aggregate state transitions
-- Enforces authorization rules
-- Returns early on validation failures
-
 **Command Router**
-- Routes commands to domain services
-- Handles service errors
-- Manages command timeouts
 
-**Transaction Boundary**
+- Handles domain commands from API Gateway
+- Command validation through schemas
+- Effect-based error handling
+
+**Command Handlers**
+
+- Implement business logic for specific commands
+- Domain service orchestration
+- Transactional boundaries
+- State changes through aggregates
+- Error handling and validation
+- Event publishing on successful execution
+
+**Transaction Manager**
+
 - Manages database transactions
-- Handles rollbacks
-- Maintains data consistency
+- Automatic rollback on errors
+- Effect context for transaction scope
+
+**Event Publisher**
+
+- Publishes domain events after successful commands
+- Maintains event ordering
+- Provides correlation IDs
+- Handles publishing errors
+
+#### Command Flow Example:
+
+```typescript
+// From API Gateway
+CreateTransactionCommand {
+  type: "CreateTransaction",
+  accountId: "account-123",
+  amount: {
+    amount: 1000n,
+    currency: "EUR"
+  },
+  date: new Date(),
+  description: "Monthly rent"
+}
+
+// Through Command Handler
+-> Validate schema
+-> Check account exists and has balance (Domain Service)
+-> Execute in transaction boundary
+-> Persist to database
+-> Publish TransactionCreatedEvent
+-> Return success response
+```
 
 ### Query Module
 
 The Query Module handles all read operations, managing optimized read models and caching strategies for different client needs.
 
 #### Core Responsibilities:
+
 - Process read queries
 - Maintain optimized read models
 - Transform query results
 - Subscribe to relevant events
 
 #### Component Diagram:
+
 ```plantuml
 @startuml
 package "Query Module" {
-    [Query Handler]
+    [Query Router]
+    [Query Handlers]
     [Read Model Updater]
     [Query Optimizer]
     database "Read Models"
@@ -519,10 +670,11 @@ queue "Event Bus"
 [API Gateway]
 [Domain Services]
 
-[API Gateway] --> [Query Handler] : Client Queries
-[Domain Services] --> [Query Handler] : Internal Queries
+[API Gateway] --> [Query Router] : Client Queries
+[Domain Services] --> [Query Router] : Internal Queries
 
-[Query Handler] --> [Query Optimizer] : Execute
+[Query Router] --> [Query Handlers] : Route queries
+[Query Handlers] --> [Query Optimizer] : Execute
 [Query Optimizer] --> [Read Models] : Fetch Data
 
 [Event Bus] --> [Read Model Updater] : Domain Events
@@ -532,31 +684,57 @@ queue "Event Bus"
 
 #### Component Details:
 
-**Query Handler**
+**Query Router**
+
 - Routes queries to appropriate handlers
 - Manages response transformation
 - Handles pagination requests
 
+**Query Handlers**
+
+- Process specific query types (e.g., GetAccountTransactions)
+- Read from optimized query models
+- Handle data filtering and sorting
+- Manage query parameters validation
+- Implement caching strategies
+- Apply pagination and result limiting
+- Handle query-specific error cases
+
 **Read Model Updater**
+
 - Subscribes to domain events
 - Updates read models by refreshing materialized views
 - Maintains model consistency
 
 **Query Optimizer**
+
 - Basic query execution plans
 - Implements pagination
 - Handles basic sorting and filtering
+
+#### Query Flow Example:
+
+```
+GET /api?type=GetAccountTransactions&accountId=123&fromDate=2023-01-01&toDate=2023-01-31
+
+-> GetAccountTransactionsQuery
+-> Query Handler
+-> Read Model
+-> Response with paginated transactions
+```
 
 ### Categorization Module
 
 The Categorization Module provides transaction categorization.
 
 #### Core Responsibilities:
+
 - Basic transaction categorization
 - Handle user category updates
 - Process categorization business logic
 
 #### Component Diagram:
+
 ```plantuml
 @startuml
 package "Categorization Module" {
@@ -579,6 +757,7 @@ database "PostgreSQL"
 #### **Component Details:**
 
 **Category Manager**
+
 - Orchestrates categorization workflow
 - Manages category hierarchy
 - Handles user overrides
@@ -590,11 +769,13 @@ database "PostgreSQL"
 The Financial Insights Module processes financial data to provide real-time insights and reports.
 
 #### Core Responsibilities:
+
 - Calculate basic net worth
 - Generate category breakdowns
 - Track monthly trends
 
 #### Component Diagram:
+
 ```plantuml
 @startuml
 package "Financial Insights Module" {
@@ -618,11 +799,13 @@ database "PostgreSQL"
 #### Component Details:
 
 **Insights Engine**
+
 - Receives domain events (transactions, categories)
 - Performs financial calculations
 - Creates analytics commands for persistence
 
 **Report Generator**
+
 - Handles report requests
 - Uses Query Module to access pre-calculated data
 - Formats data for presentation
@@ -631,53 +814,54 @@ database "PostgreSQL"
 
 ```
 /
-├── apps/                       # Application code
-│   ├── backend/               # Backend monolith
+├── apps/                        # Application code
+│   ├── backend/                 # Backend monolith
 │   │   ├── src/
-│   │   │   ├── domain/       # Domain model and aggregates
-│   │   │   │   ├── account/  # Account aggregate
-│   │   │   │   ├── transaction/ # Transaction aggregate
-│   │   │   │   └── category/ # Category aggregate
-│   │   │   ├── application/  # Application services
-│   │   │   │   ├── commands/ # Command handlers
-│   │   │   │   ├── queries/  # Query handlers
-│   │   │   │   └── events/   # Event handlers
-│   │   │   ├── infrastructure/ # Technical implementations
-│   │   │   │   ├── db/      # Database access
-│   │   │   │   └── eventbus/ # In-memory event bus
-│   │   │   └── shared/       # Shared utilities
-│   │   ├── db/              # Database management
-│   │   │   ├── migrations/  # Nessie migrations
-│   │   │   └── seeds/      # Initial data seeds
-│   │   └── tests/          # Test suites
+│   │   │   ├── domain/          # Domain model and aggregates
+│   │   │   │   ├── aggregate/   # Root aggregates
+│   │   │   │   ├── command/     # Command types and schemas
+│   │   │   │   └── query/       # Query types and schemas
+│   │   │   ├── application/     # Application services
+│   │   │   │   ├── account/     # Account-related handlers
+│   │   │   │   └── transaction/ # Transaction-related handlers
+│   │   │   ├── infrastructure/  # Technical implementations
+│   │   │   │   ├── db/          # Database access
+│   │   │   │   ├── http/        # HTTP controllers
+│   │   │   │   └── eventbus/    # In-memory event bus
+│   │   │   └── shared/          # Shared utilities
+│   │   ├── db/                  # Database management
+│   │   │   ├── migration/       # Nessie migrations
+│   │   │   └── seed /           # Initial data seeds
+│   │   └── tests/               # Test suites
 │   │
-│   └── web/                # Frontend application
-│       ├── routes/         # Fresh routes
-│       ├── islands/        # Interactive components
-│       │   ├── transactions/ # Transaction management
-│       │   ├── insights/     # Financial insights
-│       │   └── shared/       # Shared islands
-│       └── components/     # UI components
+│   └── web/                     # Frontend application
+│       ├── routes/              # Fresh routes
+│       ├── islands/             # Interactive components
+│       │   ├── transactions/    # Transaction management
+│       │   ├── insights/        # Financial insights
+│       │   └── shared/          # Shared islands
+│       └── components/          # UI components
 │
-├── packages/              # Shared code
-│   ├── types/            # Type definitions
-│   ├── validation/       # Validation rules
-│   └── utils/           # Shared utilities
+├── packages/                    # Shared code
+│   ├── types/                   # Type definitions
+│   ├── validation/              # Validation rules
+│   └── utils/                   # Shared utilities
 │
-├── tools/               # Development tools
-│   └── scripts/        # Build and maintenance
+├── tools/                       # Development tools
+│   └── scripts/                 # Build and maintenance
 │
-├── docs/               # Documentation
-│   ├── model/         # Domain documentation
-│   └── api/           # API documentation
+├── docs/                        # Documentation
+│   ├── model/                   # Domain documentation
+│   └── api/                     # API documentation
 │
-└── infra/             # Infrastructure
-    └── docker/        # Docker configurations
+└── infra/                       # Infrastructure
+    └── docker/                  # Docker configurations
 ```
 
 ### File Naming Conventions
 
 #### Backend
+
 - Domain entities: `Entity.ts`
 - Commands: `EntityCommand.ts`
 - Queries: `EntityQuery.ts`
@@ -686,6 +870,7 @@ database "PostgreSQL"
 - Tests: `Entity.test.ts`
 
 #### Frontend
+
 - Pages: `EntityPage.tsx`
 - Islands: `EntityIsland.tsx`
 - Components: `EntityComponent.tsx`
@@ -695,6 +880,7 @@ database "PostgreSQL"
 ### Database Migration Strategy
 
 #### Tools and Setup
+
 - **Nessie**: Type-safe database migration tool for Deno
 - Version-controlled migrations
 - Forward and reverse migrations support
@@ -702,9 +888,10 @@ database "PostgreSQL"
 - Migration status tracking
 
 #### Migration Naming Convention
+
 ```typescript
-// Example migration file: db/migrations/timestamps/20240101T120000_create_accounts.ts
-import { AbstractMigration, Info } from "https://deno.land/x/nessie/mod.ts";
+// Example migration file: db/migrations/timestamps/20250303210900_create_accounts.ts
+import { AbstractMigration, Info } from '$nessie/mod.ts';
 
 export default class extends AbstractMigration {
   /** Runs on migrate */
@@ -732,18 +919,21 @@ export default class extends AbstractMigration {
 ## Installation Guide
 
 ### Prerequisites
+
 - Deno
 - Docker & Docker Compose
 
 ### Local Development Setup
 
 1. **Install**
+
 ```bash
 # Install Deno dependencies
 deno cache deps.ts
 ```
 
 2. **Database Setup**
+
 ```bash
 # Start PostgreSQL container
 docker compose up db -d
@@ -759,6 +949,7 @@ deno task nessie seed
 ```
 
 3. **Start Services**
+
 ```bash
 # Start backend and frontend
 deno task dev
