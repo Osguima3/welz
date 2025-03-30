@@ -3,7 +3,11 @@ import { Account, AccountType } from '../../../../shared/schema/Account.ts';
 import { Money } from '../../../../shared/schema/Money.ts';
 import { UUID } from '../../../../shared/schema/UUID.ts';
 import { catchAllDie } from '../../../../shared/utils.ts';
-import { AccountRepository, FindAccountsOptions } from '../../domain/account/AccountRepository.ts';
+import {
+  AccountRepository,
+  FindAccountHistoryOptions,
+  FindAccountsOptions,
+} from '../../domain/account/AccountRepository.ts';
 import { PostgresClient } from './PostgresClient.ts';
 
 interface AccountRow {
@@ -116,6 +120,56 @@ export const PostgresAccountRepository = Layer.effect(
           };
         }).pipe(
           catchAllDie('Failed to find accounts'),
+        ),
+
+      findAccountHistory: (options: FindAccountHistoryOptions = {}) =>
+        Effect.gen(function* () {
+          let query = `
+            SELECT 
+              account_id as "accountId",
+              month,
+              name,
+              type,
+              last_updated as "lastUpdated",
+              currency,
+              balance,
+              month_balance as "monthBalance",
+              month_income as "monthIncome",
+              month_expenses as "monthExpenses"
+            FROM account_history_view
+            WHERE 1=1
+          `;
+
+          const params: unknown[] = [];
+
+          if (options.accountId) {
+            query += ` AND account_id = $${params.length + 1}`;
+            params.push(options.accountId);
+          }
+
+          if (options.dateRange?.start) {
+            query += ` AND month >= DATE_TRUNC('month', $${params.length + 1}::timestamp)`;
+            params.push(options.dateRange.start);
+          }
+
+          if (options.dateRange?.end) {
+            query += ` AND month <= DATE_TRUNC('month', $${params.length + 1}::timestamp)`;
+            params.push(options.dateRange.end);
+          }
+
+          query += ` ORDER BY month DESC, balance DESC`;
+
+          const result = yield* client.runQuery<AccountHistoryRow>(query, params);
+
+          return result.rows.map((row) => ({
+            ...row,
+            balance: Money.create(Number(row.balance), row.currency),
+            monthBalance: Money.create(Number(row.monthBalance), row.currency),
+            monthIncome: Money.create(Number(row.monthIncome), row.currency),
+            monthExpenses: Money.create(Number(row.monthExpenses), row.currency),
+          }));
+        }).pipe(
+          catchAllDie('Failed to find account history'),
         ),
 
       save: (account: Account) =>

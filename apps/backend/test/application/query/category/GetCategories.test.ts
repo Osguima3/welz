@@ -23,11 +23,12 @@ const TestCategoryRepository = Layer.succeed(
 
       return Effect.succeed({ items, total: items.length, page: 1, pageSize: 10 });
     },
+    findCategoryHistory: () => Effect.fail(new Error('Not implemented')),
   },
 );
 
-Deno.test('GetCategories', async (t) => {
-  const getCategories = await GetCategories.pipe(
+Deno.test('GetAllCategories', async (t) => {
+  const getAllCategories = await GetCategories.pipe(
     Effect.provide(GetCategories.Live),
     Effect.provide(UnitTestLayer),
     Effect.provide(TestCategoryRepository),
@@ -35,7 +36,7 @@ Deno.test('GetCategories', async (t) => {
   );
 
   await t.step('should return all categories', async () => {
-    const result = await Effect.runPromise(getCategories(TestQueries.getCategories()));
+    const result = await Effect.runPromise(getAllCategories(TestQueries.getCategories()));
 
     assertEquals(result.items.length, 3);
     assertEquals(result.total, 3);
@@ -56,7 +57,7 @@ Deno.test('GetCategories', async (t) => {
 
   await t.step('should filter categories by type', async () => {
     const result = await Effect.runPromise(
-      getCategories(TestQueries.getCategories({ categoryType: 'INCOME' })),
+      getAllCategories(TestQueries.getCategories({ categoryType: 'INCOME' })),
     );
 
     assertEquals(result.items.length, 2);

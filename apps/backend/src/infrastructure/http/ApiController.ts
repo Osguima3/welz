@@ -17,18 +17,6 @@ export class ApiController extends Context.Tag('ApiController')<
       const routeQuery = yield* QueryRouter;
       const webTransformer = yield* WebTransformer;
 
-      function createResponse(webResponse: WebResponse): Effect.Effect<Response> {
-        return Effect.succeed(
-          new Response(
-            webResponse.body,
-            {
-              status: webResponse.status,
-              headers: { 'Content-Type': 'application/json' },
-            },
-          ),
-        );
-      }
-
       function handleCommand(input: unknown): Effect.Effect<WebResponse, Error> {
         return Effect.gen(function* () {
           const command = yield* Schema.decodeUnknown(Command)(input);
@@ -45,10 +33,23 @@ export class ApiController extends Context.Tag('ApiController')<
         });
       }
 
+      const corsHeaders = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': 'http://localhost:8001',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      };
+
+      function createResponse(response: WebResponse): Effect.Effect<Response> {
+        return Effect.succeed(new Response(response.body, { status: response.status, headers: corsHeaders }));
+      }
+
       return (req) => {
         const url = new URL(req.url);
         return Effect.gen(function* () {
-          if (url.pathname !== '/api') {
+          if (req.method === 'OPTIONS') {
+            return { body: null, status: 204 };
+          } else if (url.pathname !== '/api') {
             return yield* Effect.fail(new Error('Not Found'));
           } else if (req.method === 'POST') {
             const input = yield* Effect.promise(() => req.json());

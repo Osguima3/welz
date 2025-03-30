@@ -16,6 +16,7 @@ const TestAccountRepository = Layer.succeed(
   {
     findById: () => Effect.fail(new Error('Not implemented')),
     findAccounts: () => Effect.succeed({ items: mockAccounts, total: 2, page: 1, pageSize: 10 }),
+    findAccountHistory: () => Effect.fail(new Error('Not implemented')),
     save: () => Effect.fail(new Error('Not implemented')),
   },
 );

@@ -1,11 +1,13 @@
-import { assertEquals } from '$std/assert/mod.ts';
+import { assertEquals, assertGreater, assertLessOrEqual } from '$std/assert/mod.ts';
 import { Effect } from 'effect';
 import { TransactionManager } from '../../../src/application/command/TransactionManager.ts';
 import { CategoryRepository } from '../../../src/domain/category/CategoryRepository.ts';
 import { IntegrationTestLayer } from '../../helper/TestLayers.ts';
+import { ReadModelRepository } from '../../../src/domain/readmodel/ReadModelRepository.ts';
 
 Deno.test('PostgresCategoryRepository Integration', async (t) => {
   let repository: Effect.Effect.Success<typeof CategoryRepository>;
+  let readModelRepository: Effect.Effect.Success<typeof ReadModelRepository>;
   let transactionManager: Effect.Effect.Success<typeof TransactionManager>;
 
   function runTransaction<T>(operation: Effect.Effect<T, Error>): Promise<T> {
@@ -16,6 +18,7 @@ Deno.test('PostgresCategoryRepository Integration', async (t) => {
     await Effect.runPromise(
       Effect.gen(function* () {
         repository = yield* CategoryRepository;
+        readModelRepository = yield* ReadModelRepository;
         transactionManager = yield* TransactionManager;
       }).pipe(
         Effect.provide(IntegrationTestLayer),
@@ -83,5 +86,47 @@ Deno.test('PostgresCategoryRepository Integration', async (t) => {
     assertEquals(result.id, category.id);
     assertEquals(result.name, 'Salary');
     assertEquals(result.type, 'INCOME');
+  });
+
+  await t.step('should get category history data', async () => {
+    await runTransaction(readModelRepository.refreshMaterializedViews());
+
+    const months = 6;
+    const maxCategories = 3;
+    const end = new Date();
+    const start = new Date(end.getFullYear(), end.getMonth() - months + 1, 1);
+
+    const result = await runTransaction(repository.findCategoryHistory({ dateRange: { start, end }, maxCategories }));
+
+    // Verify we get data and respect limits
+    assertGreater(result.length, 0);
+
+    // Check category data structure
+    const firstCategory = result[0];
+    assertEquals('month' in firstCategory, true);
+    assertEquals('categoryId' in firstCategory, true);
+    assertEquals('name' in firstCategory, true);
+    assertEquals('type' in firstCategory, true);
+    assertEquals('total' in firstCategory, true);
+    assertEquals('average' in firstCategory, true);
+    assertEquals('typeTotal' in firstCategory, true);
+    assertEquals('typePercentage' in firstCategory, true);
+
+    // Verify percentages add up correctly
+    const monthCategories = result.filter((c) => c.month.toISOString() === result[0].month.toISOString());
+    const expensePercentages = monthCategories
+      .filter((c) => c.type === 'EXPENSE')
+      .reduce((sum, c) => sum + c.typePercentage, 0);
+    const incomePercentages = monthCategories
+      .filter((c) => c.type === 'INCOME')
+      .reduce((sum, c) => sum + c.typePercentage, 0);
+
+    assertLessOrEqual(expensePercentages, 100);
+    assertLessOrEqual(incomePercentages, 100);
+
+    // Verify time range
+    const oldestMonth = result[result.length - 1].month;
+    const threshold = new Date(end.getFullYear(), end.getMonth() - months, 1);
+    assertEquals(oldestMonth >= threshold, true);
   });
 });

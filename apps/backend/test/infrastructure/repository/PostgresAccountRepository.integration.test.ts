@@ -1,15 +1,17 @@
-import { assertEquals } from '$std/assert/mod.ts';
+import { assertEquals, assertExists, assertGreater } from '$std/assert/mod.ts';
 import { Effect } from 'effect';
 import { Account } from '../../../../shared/schema/Account.ts';
 import { Money } from '../../../../shared/schema/Money.ts';
 import { TransactionManager } from '../../../src/application/command/TransactionManager.ts';
 import { AccountRepository } from '../../../src/domain/account/AccountRepository.ts';
+import { ReadModelRepository } from '../../../src/domain/readmodel/ReadModelRepository.ts';
 import { IntegrationTestLayer } from '../../helper/TestLayers.ts';
 
 const CASH_WALLET_ID = 'b26b6d1c-5c28-49f3-8672-a366a623670c';
 
 Deno.test('PostgresAccountRepository Integration', async (t) => {
   let repository: Effect.Effect.Success<typeof AccountRepository>;
+  let readModelRepository: Effect.Effect.Success<typeof ReadModelRepository>;
   let transactionManager: Effect.Effect.Success<typeof TransactionManager>;
 
   function runTransaction<T>(operation: Effect.Effect<T, Error>): Promise<T> {
@@ -20,6 +22,7 @@ Deno.test('PostgresAccountRepository Integration', async (t) => {
     await Effect.runPromise(
       Effect.gen(function* () {
         repository = yield* AccountRepository;
+        readModelRepository = yield* ReadModelRepository;
         transactionManager = yield* TransactionManager;
       }).pipe(
         Effect.provide(IntegrationTestLayer),
@@ -84,5 +87,43 @@ Deno.test('PostgresAccountRepository Integration', async (t) => {
     assertEquals(result.balance.currency, updatedBalance.currency);
 
     await runTransaction(repository.save(account));
+  });
+
+  await t.step('should get account history data', async () => {
+    await runTransaction(readModelRepository.refreshMaterializedViews());
+
+    const months = 6;
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+
+    const result = await runTransaction(repository.findAccountHistory({
+      dateRange: { start: startDate, end: now },
+    }));
+
+    assertExists(result);
+    assertGreater(result.length, 0);
+
+    // Check account data structure
+    const firstAccount = result[0];
+    assertEquals('month' in firstAccount, true);
+    assertEquals('accountId' in firstAccount, true);
+    assertEquals('name' in firstAccount, true);
+    assertEquals('type' in firstAccount, true);
+    assertEquals('lastUpdated' in firstAccount, true);
+    assertEquals('balance' in firstAccount, true);
+    assertEquals('monthBalance' in firstAccount, true);
+    assertEquals('monthIncome' in firstAccount, true);
+    assertEquals('monthExpenses' in firstAccount, true);
+
+    const monthAccounts = result.filter((a) => a.month.toISOString() === result[0].month.toISOString());
+    monthAccounts.forEach((account) => {
+      const monthChange = account.monthIncome.amount - account.monthExpenses.amount;
+      assertEquals(account.monthBalance.amount, monthChange);
+      assertEquals(typeof account.monthBalance.amount === 'number', true);
+    });
+
+    const oldestMonth = result[result.length - 1].month;
+    const threshold = new Date(now.getFullYear(), now.getMonth() - months, 1);
+    assertEquals(oldestMonth >= threshold, true);
   });
 });

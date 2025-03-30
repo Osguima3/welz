@@ -1,7 +1,9 @@
 import { Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
 import { Account, AccountType } from '../../../shared/schema/Account.ts';
+import { AccountHistoryEntry } from '../../../shared/schema/AccountHistory.ts';
 import { Category, CategoryType } from '../../../shared/schema/Category.ts';
+import { CategoryHistoryEntry } from '../../../shared/schema/CategoryHistory.ts';
 import { Money } from '../../../shared/schema/Money.ts';
 import Page from '../../../shared/schema/Page.ts';
 import { Transaction } from '../../../shared/schema/Transaction.ts';
@@ -26,6 +28,27 @@ function account(options: BuildAccountOptions = {}): Account {
   });
 }
 
+interface BuildAccountHistoryOptions {
+  month?: Date;
+  balance?: Money;
+  monthIncome?: Money;
+  monthExpenses?: Money;
+}
+
+function accountHistory(options: BuildAccountHistoryOptions) {
+  return AccountHistoryEntry.make({
+    accountId: randomUUID(),
+    month: options.month ?? new Date(),
+    name: 'Test Account',
+    type: 'BANK',
+    lastUpdated: options.month ?? new Date(),
+    balance: options.balance ?? Money.create(1000, 'EUR'),
+    monthBalance: options.balance ?? Money.create(1000, 'EUR'),
+    monthIncome: options.monthIncome ?? Money.create(1000, 'EUR'),
+    monthExpenses: options.monthExpenses ?? Money.create(1000, 'EUR'),
+  });
+}
+
 interface BuildCategoryOptions {
   id?: string;
   name?: string;
@@ -40,6 +63,25 @@ function category(options: BuildCategoryOptions = {}): Category {
     name: options.name ?? `Test Category ${id.slice(0, 8)}`,
     type: options.type ?? 'EXPENSE',
     createdAt: options.createdAt ?? new Date(),
+  });
+}
+
+interface BuildCategoryHistoryOptions {
+  month: Date;
+  type: 'INCOME' | 'EXPENSE';
+  amount: Money;
+}
+
+function categoryHistory(options: BuildCategoryHistoryOptions) {
+  return CategoryHistoryEntry.make({
+    categoryId: randomUUID(),
+    month: options.month,
+    name: 'Test Category',
+    type: options.type,
+    total: options.amount,
+    average: options.amount,
+    typeTotal: options.amount,
+    typePercentage: 100,
   });
 }
 
@@ -72,7 +114,9 @@ function page<A, I, R>(itemSchema: Schema.Schema<A, I, R>, ...items: ReadonlyArr
 
 export default {
   account,
+  accountHistory,
   category,
+  categoryHistory,
   transaction,
   page,
 };

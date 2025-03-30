@@ -1,9 +1,14 @@
 import { Effect, Layer } from 'effect';
 import { Category, CategoryType } from '../../../../shared/schema/Category.ts';
 import { Currency } from '../../../../shared/schema/Currency.ts';
+import { Money } from '../../../../shared/schema/Money.ts';
 import { UUID } from '../../../../shared/schema/UUID.ts';
 import { catchAllDie } from '../../../../shared/utils.ts';
-import { CategoryRepository, FindCategoriesOptions } from '../../domain/category/CategoryRepository.ts';
+import {
+  CategoryRepository,
+  FindCategoriesOptions,
+  FindCategoryHistoryOptions,
+} from '../../domain/category/CategoryRepository.ts';
 import { PostgresClient } from './PostgresClient.ts';
 
 interface CategoryRow {
@@ -102,6 +107,62 @@ export const PostgresCategoryRepository = Layer.effect(
           };
         }).pipe(
           catchAllDie('Failed to find categories'),
+        ),
+
+      findCategoryHistory: (options: FindCategoryHistoryOptions = {}) =>
+        Effect.gen(function* () {
+          const today = new Date();
+          const defaultStartDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+          const startDate = options.dateRange?.start || defaultStartDate;
+          const limit = 10;
+
+          let query = `
+              SELECT
+                category_id as "categoryId",
+                month,
+                currency,
+                name,
+                type,
+                category_total as "categoryTotal",
+                category_average as "categoryAverage",
+                type_total as "typeTotal",
+                type_percentage as "typePercentage"
+              FROM category_history_view 
+              WHERE month >= DATE_TRUNC('month', $1::timestamp)`;
+
+          const params: unknown[] = [startDate];
+
+          if (options.dateRange?.end) {
+            query += ` AND month <= DATE_TRUNC('month', $${params.length + 1}::timestamp)`;
+            params.push(options.dateRange.end);
+          }
+
+          if (options.categoryId) {
+            query += ` AND category_id = $${params.length + 1}`;
+            params.push(options.categoryId);
+          }
+
+          if (options.maxCategories) {
+            query += ` AND type_rank <= $${params.length + 1}`;
+            params.push(options.maxCategories);
+          }
+
+          query += ` AND type_rank <= $${params.length + 1}`;
+          params.push(limit);
+
+          query += ` ORDER BY month DESC, type, type_rank`;
+
+          const result = yield* client.runQuery<CategoryHistoryRow>(query, params);
+
+          return result.rows.map((row) => ({
+            ...row,
+            total: Money.create(Number(row.categoryTotal), row.currency),
+            average: Money.create(Number(row.categoryAverage), row.currency),
+            typeTotal: Money.create(Number(row.typeTotal), row.currency),
+            typePercentage: Number(row.typePercentage),
+          }));
+        }).pipe(
+          catchAllDie('Failed to find category history'),
         ),
 
       save: (category: Category) =>
