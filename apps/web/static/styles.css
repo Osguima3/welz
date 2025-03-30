@@ -1,3 +1,53 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Logo colors */
+    --logo-dark: #403e43;
+    --logo-blue: #1eaedb;
+
+    /* Base colors from logo */
+    --background: 0 0% 100%;
+    --foreground: 220 13% 26%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 26%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 26%;
+
+    --primary: 196 75% 49%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 13% 26%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 13% 46%;
+
+    --accent: 220 13% 95%;
+    --accent-foreground: 220 13% 26%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 72% 29%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 220 13% 26%;
+    --input: 220 13% 26%;
+    --ring: 196 75% 49%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

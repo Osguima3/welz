@@ -23,7 +23,9 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
-    "noImplicitThis": true
+    "noImplicitThis": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
   },
   "lint": {
     "rules": {

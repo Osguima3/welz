@@ -1,0 +1,54 @@
+:root {
+  /* Primary colors */
+  --color-primary-dark: #403e43;
+  --color-primary-main: #1eaedb;
+  --color-primary-light: #5fc8e8;
+  --color-primary-white: #ffffff;
+
+  /* Secondary colors */
+  --color-secondary-main: #db621e;
+  --color-secondary-light: #f08a4b;
+  --color-secondary-dark: #a44d18;
+
+  /* Neutral colors */
+  --color-neutral-black: #1a191b;
+  --color-neutral-darkGray: #403e43;
+  --color-neutral-gray: #6b686f;
+  --color-neutral-lightGray: #9d9ba1;
+  --color-neutral-platinum: #e5e5e7;
+  --color-neutral-white: #ffffff;
+
+  /* Accent colors */
+  --color-accent-success: #2ecc71;
+  --color-accent-warning: #f1c40f;
+  --color-accent-error: #e74c3c;
+  --color-accent-info: #3498db;
+
+  /* Background colors */
+  --color-background-dark: #2c2b2f;
+  --color-background-light: #f5f5f7;
+  --color-background-gradient: linear-gradient(135deg, #403e43 0%, #1eaedb 100%);
+
+  /* Shadow effects */
+  --shadow-small: 0 2px 4px rgba(64, 62, 67, 0.1);
+  --shadow-medium: 0 4px 8px rgba(64, 62, 67, 0.15);
+  --shadow-large: 0 8px 16px rgba(64, 62, 67, 0.2);
+
+  /* Theme colors - light mode by default */
+  --color-background: var(--color-background-light);
+  --color-text: var(--color-neutral-black);
+  --color-heading: var(--color-primary-dark);
+  --color-primary: var(--color-primary-main);
+  --color-secondary: var(--color-secondary-main);
+  --color-border: var(--color-neutral-lightGray);
+}
+
+/* Dark theme class to apply to body or a container */
+.dark-theme {
+  --color-background: var(--color-background-dark);
+  --color-text: var(--color-neutral-white);
+  --color-heading: var(--color-primary-light);
+  --color-primary: var(--color-primary-light);
+  --color-secondary: var(--color-secondary-light);
+  --color-border: var(--color-neutral-darkGray);
+}

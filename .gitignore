@@ -43,5 +43,5 @@ coverage.lcov
 # Fresh build directory
 _fresh/
 
-# npm dependencies
-node_modules/
+# Lovable reference files
+apps/lovable/

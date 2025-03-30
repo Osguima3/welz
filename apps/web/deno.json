@@ -20,5 +20,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
   },
-  "imports": {}
+  "imports": {
+    "@shared/": "../shared/"
+  }
 }
