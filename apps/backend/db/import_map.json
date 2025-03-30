@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "effect": "npm:effect@3.13.2",
+    "$nessie/": "https://deno.land/x/nessie@2.0.11/"
+  }
+}

@@ -1,24 +1,26 @@
 import { assertEquals } from '$std/assert/mod.ts';
 import { Effect } from 'effect';
-import { EventType, WelzEvent } from '../../../src/application/schema/Event.ts';
-import { Money } from '../../../src/domain/common/Money.ts';
+import { randomUUID } from 'node:crypto';
+import { Money } from '../../../../shared/schema/Money.ts';
+import { WelzEvent } from '../../../src/application/schema/Event.ts';
+import { TransactionCreatedEvent } from '../../../src/domain/transaction/events.ts';
 import { InMemoryEventBus } from '../../../src/infrastructure/eventbus/InMemoryEventBus.ts';
 import { EventBus } from '../../../src/shared/events/EventBus.ts';
 
-const mockEvent: WelzEvent = {
-  type: EventType.TRANSACTION_CREATED,
+const mockEvent = TransactionCreatedEvent.make({
+  type: 'TransactionCreated',
   metadata: {
     timestamp: new Date(),
-    correlationId: '123',
+    correlationId: randomUUID(),
   },
   payload: {
-    id: '123',
-    accountId: '456',
+    id: randomUUID(),
+    accountId: randomUUID(),
     amount: Money.create(1000, 'EUR'),
     date: new Date(),
     description: 'Test transaction',
   },
-};
+});
 
 Deno.test('InMemoryEventBus', async (t) => {
   const eventBus = await EventBus.pipe(
@@ -32,7 +34,7 @@ Deno.test('InMemoryEventBus', async (t) => {
 
     await Effect.runPromise(
       Effect.gen(function* () {
-        yield* eventBus.subscribe(EventType.TRANSACTION_CREATED, (event) => {
+        yield* eventBus.subscribe('TransactionCreated', (event) => {
           handlerCalled = true;
           receivedEvent = event;
           return Effect.succeed(undefined);
@@ -56,11 +58,11 @@ Deno.test('InMemoryEventBus', async (t) => {
           return Effect.succeed(undefined);
         };
 
-        yield* eventBus.subscribe(EventType.TRANSACTION_CREATED, handler);
+        yield* eventBus.subscribe('TransactionCreated', handler);
         yield* eventBus.publish(mockEvent);
         assertEquals(handlerCallCount, 1, 'Handler should be called once');
 
-        yield* eventBus.unsubscribe(EventType.TRANSACTION_CREATED, handler);
+        yield* eventBus.unsubscribe('TransactionCreated', handler);
         yield* eventBus.publish(mockEvent);
         assertEquals(handlerCallCount, 1, 'Handler should not be called after unsubscribing');
       }),
@@ -74,7 +76,7 @@ Deno.test('InMemoryEventBus', async (t) => {
       Effect.gen(function* () {
         for (const id of ['1', '2', '3']) {
           yield* eventBus.subscribe(
-            EventType.TRANSACTION_CREATED,
+            'TransactionCreated',
             () => {
               handlersCalled.push(id);
               return Effect.succeed(undefined);
@@ -90,26 +92,27 @@ Deno.test('InMemoryEventBus', async (t) => {
     );
   });
 
-  await t.step('should handle errors in event handlers gracefully', async () => {
+  await t.step('should fail if any handler fails', async () => {
     let successHandlerCalled = false;
 
     await Effect.runPromise(
       Effect.gen(function* () {
         yield* eventBus.subscribe(
-          EventType.TRANSACTION_CREATED,
+          'TransactionCreated',
           () => Effect.fail(new Error('Handler error')),
         );
 
         yield* eventBus.subscribe(
-          EventType.TRANSACTION_CREATED,
+          'TransactionCreated',
           () => {
             successHandlerCalled = true;
             return Effect.succeed(undefined);
           },
         );
 
-        yield* eventBus.publish(mockEvent);
+        const error = yield* eventBus.publish(mockEvent).pipe(Effect.flip);
 
+        assertEquals(error.message, 'Handler error');
         assertEquals(successHandlerCalled, true, 'Success handler should be called despite error in other handler');
       }),
     );

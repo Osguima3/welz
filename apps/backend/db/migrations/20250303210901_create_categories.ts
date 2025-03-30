@@ -11,7 +11,6 @@ export default class extends AbstractMigration<ClientPostgreSQL> {
       );
 
       CREATE INDEX idx_categories_type ON categories(type);
-      CREATE INDEX idx_categories_name ON categories(name);
     `);
   }
 

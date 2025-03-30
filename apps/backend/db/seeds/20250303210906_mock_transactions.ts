@@ -1,6 +1,6 @@
 import { AbstractSeed, ClientPostgreSQL, Info } from '$nessie/mod.ts';
-import { Currency } from '../../src/domain/common/Currency.ts';
-import { Money } from '../../src/domain/common/Money.ts';
+import { Currency } from '../../../shared/schema/Currency.ts';
+import { Money } from '../../../shared/schema/Money.ts';
 
 interface MockTransaction {
   accountId: string;
@@ -60,7 +60,7 @@ export default class extends AbstractSeed<ClientPostgreSQL> {
 
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 3);
+    startDate.setMonth(startDate.getMonth() - 6);
 
     const transactions: MockTransaction[] = [];
 
@@ -71,7 +71,7 @@ export default class extends AbstractSeed<ClientPostgreSQL> {
         const description = descTemplate.replace('{merchant}', merchant);
 
         const isExpense = Math.random() < 0.7;
-        const amount = isExpense ? generateRandomMoney(-500, -10) : generateRandomMoney(1000, 5000);
+        const amount = isExpense ? generateRandomMoney(-500, 100) : generateRandomMoney(1000, 5000);
 
         const matchingCategories = categories.filter((c) =>
           (isExpense && c.type === 'EXPENSE') || (!isExpense && c.type === 'INCOME')

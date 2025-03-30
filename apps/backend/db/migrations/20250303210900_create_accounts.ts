@@ -7,7 +7,7 @@ export default class extends AbstractMigration<ClientPostgreSQL> {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(255) NOT NULL,
         type VARCHAR(20) NOT NULL CHECK (type IN ('CASH', 'BANK')),
-        balance DECIMAL(19,4) NOT NULL DEFAULT 0,
+        balance DECIMAL(19,2) NOT NULL DEFAULT 0,
         currency CHAR(3) NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP

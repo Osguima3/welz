@@ -527,7 +527,7 @@ Content-Type: application/json
 #### Query Flow Example:
 
 ```http
-GET /api?type=GetAccountTransactions&accountId=123&fromDate=2023-01-01&toDate=2023-01-31
+GET /api?type=GetTransactions&accountId=123&fromDate=2023-01-01&toDate=2023-01-31
 ```
 
 Response:
@@ -692,7 +692,7 @@ queue "Event Bus"
 
 **Query Handlers**
 
-- Process specific query types (e.g., GetAccountTransactions)
+- Process specific query types (e.g., GetTransactions)
 - Read from optimized query models
 - Handle data filtering and sorting
 - Manage query parameters validation
@@ -715,9 +715,9 @@ queue "Event Bus"
 #### Query Flow Example:
 
 ```
-GET /api?type=GetAccountTransactions&accountId=123&fromDate=2023-01-01&toDate=2023-01-31
+GET /api?type=GetTransactions&accountId=123&fromDate=2023-01-01&toDate=2023-01-31
 
--> GetAccountTransactionsQuery
+-> GetTransactionsQuery
 -> Query Handler
 -> Read Model
 -> Response with paginated transactions

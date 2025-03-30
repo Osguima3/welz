@@ -7,13 +7,12 @@ import { TestDataHelper } from './TestDataHelper.ts';
 
 export const UnitTestRepositoryLayer = Layer.succeed(
   TransactionManager,
-  <T>(operation: () => Effect.Effect<T, Error, PostgresClient>) =>
+  (_, operation) =>
     operation().pipe(
       Effect.provideService(PostgresClient, {
         connect: () => Effect.succeed(undefined),
         end: () => Effect.succeed(undefined),
-        queryArray: () => Effect.succeed({ rows: [] }),
-        queryObject: () => Effect.succeed({ rows: [] }),
+        runQuery: () => Effect.succeed({ rows: [] }),
       }),
     ),
 );

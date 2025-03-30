@@ -1,8 +1,10 @@
 /// <reference lib="dom" />
-import { Array, Cause, Context, Effect, Layer, Match, ParseResult } from 'effect';
+import { Array, Cause, Context, Effect, Layer, LogLevel, Match, ParseResult } from 'effect';
+import { CommandResponse } from '../../application/schema/Command.ts';
+import { QueryResponse } from '../../application/schema/Query.ts';
 
 export interface WebResponse {
-  body: string;
+  body: string | null;
   status: number;
 }
 
@@ -15,14 +17,14 @@ interface ErrorData {
   code: number;
   detail: string;
   error?: string;
-  issue?: unknown | undefined;
+  issue?: unknown;
 }
 
 export class WebTransformer extends Context.Tag('WebTransformer')<
   WebTransformer,
   {
-    transformCommand: (result: unknown) => Effect.Effect<WebResponse>;
-    transformQuery: (result: unknown) => Effect.Effect<WebResponse>;
+    transformCommand: (result: CommandResponse) => Effect.Effect<WebResponse>;
+    transformQuery: (result: QueryResponse) => Effect.Effect<WebResponse>;
     transformError: (error: Cause.Cause<Error | ParseResult.ParseError>) => Effect.Effect<WebResponse>;
   }
 >() {
@@ -32,34 +34,48 @@ export class WebTransformer extends Context.Tag('WebTransformer')<
       transformCommand: (body) => Effect.succeed({ body: JSON.stringify(body || {}), status: 201 }),
       transformQuery: (body) => Effect.succeed({ body: JSON.stringify(body || {}), status: 200 }),
       transformError: (error) =>
-        Effect.succeed(handleError(error)).pipe(
-          Effect.map(({ body, status }) => ({ body: JSON.stringify(body), status })),
-        ),
+        handleError(error).pipe(Effect.map(({ body, status }) => ({ body: JSON.stringify(body), status }))),
     },
   );
 }
 
-function handleError(error: Cause.Cause<Error | ParseResult.ParseError>): ErrorBody {
+function handleError(error: Cause.Cause<Error | ParseResult.ParseError>): Effect.Effect<ErrorBody> {
   return Match.value(error).pipe(
-    Match.withReturnType<ErrorBody>(),
+    Match.withReturnType<Effect.Effect<ErrorBody>>(),
     Match.tag('Fail', handleFail),
     Match.tag('Die', handleDie),
-    Match.orElse((error) => ({
-      body: { error: 'Server Error', code: 999, detail: `${error._tag}: ${error}`, issue: error },
-      status: 500,
-    })),
+    Match.orElse((error) =>
+      Effect.succeed({
+        body: { error: 'Server Error', code: 999, detail: `${error._tag}: ${error}`, issue: error },
+        status: 500,
+      })
+    ),
+    Effect.tap((error) =>
+      Effect.logWithLevel(error.status >= 500 ? LogLevel.Error : LogLevel.Warning).pipe(
+        Effect.annotateLogs({ ...error.body, issue: String(error.body.issue) }),
+      )
+    ),
   );
 }
 
-function handleFail(error: Cause.Fail<Error | ParseResult.ParseError>): ErrorBody {
+function handleFail(error: Cause.Fail<Error | ParseResult.ParseError>): Effect.Effect<ErrorBody> {
   return Match.value(error.error).pipe(
-    Match.withReturnType<ErrorBody>(),
-    Match.tag('ParseError', (error) => ({ body: handleParseError(error), status: 400 })),
-    Match.orElse((error) => ({
-      body: { error: 'Server Error', code: 300, detail: error.toString(), issue: error },
-      status: 500,
-    })),
+    Match.withReturnType<Effect.Effect<ErrorBody>>(),
+    Match.tag('ParseError', (error) => Effect.succeed({ body: handleParseError(error), status: 400 })),
+    Match.orElse((error) =>
+      Effect.succeed({
+        body: { error: 'Server Error', code: 300, detail: error.toString(), issue: error },
+        status: 500,
+      })
+    ),
   );
+}
+
+function handleDie(error: Cause.Die): Effect.Effect<ErrorBody> {
+  return Effect.succeed({
+    body: { error: 'Server Error', code: 400, detail: tryParseMessage(error.defect), issue: error },
+    status: 500,
+  });
 }
 
 function handleParseError(error: ParseResult.ParseError): ErrorData {
@@ -72,16 +88,6 @@ function handleParseError(error: ParseResult.ParseError): ErrorData {
   };
 }
 
-/**
- * Type: 201
- * Missing: 200
- * Unexpected: 202
- * Forbidden: 201
- * Pointer: recursive
- * Refinement: 201
- * Transformation:
- * Composite: recursive
- */
 function handleParseIssue(issue: ParseResult.ParseIssue, prefix: string = ''): ErrorData {
   return Match.value(issue).pipe(
     Match.tag('Pointer', (err) => handleParseIssue(err.issue, `${prefix}${err.path.toString()}: `)),
@@ -100,24 +106,16 @@ function handleParseIssue(issue: ParseResult.ParseIssue, prefix: string = ''): E
 }
 
 function handleCompositeError(issue: ParseResult.Composite, prefix: string = ''): ErrorData {
-  const issues = issue.issues as ParseResult.SingleOrNonEmpty<ParseResult.ParseIssue>;
-  return Match.value(issues).pipe(
+  return Match.value(issue.issues).pipe(
     Match.withReturnType<ErrorData>(),
     Match.when(
-      (err: ParseResult.SingleOrNonEmpty<ParseResult.ParseIssue>) => '_tag' in err,
+      (error: ParseResult.SingleOrNonEmpty<ParseResult.ParseIssue>) => '_tag' in error,
       (single) => handleParseIssue(single, prefix),
     ),
     Match.orElse(
       (array: Array.NonEmptyReadonlyArray<ParseResult.ParseIssue>) => handleParseIssue(array[0], prefix),
     ),
   );
-}
-
-function handleDie(error: Cause.Die): ErrorBody {
-  return {
-    body: { error: 'Server Error', code: 400, detail: tryParseMessage(error.defect), issue: error },
-    status: 500,
-  };
 }
 
 function tryParseMessage(error: unknown): string {

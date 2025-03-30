@@ -1,12 +1,12 @@
 import { Schema } from 'effect';
-import { DateRange } from '../readmodel/queries.ts';
 
-export type GetAccountTransactionsQuery = typeof GetAccountTransactionsQuery.Type;
-export const GetAccountTransactionsQuery = Schema.Struct({
-  type: Schema.Literal('GetAccountTransactions'),
-  accountId: Schema.UUID,
-  dateRange: Schema.optional(DateRange),
+export type GetTransactionsQuery = typeof GetTransactionsQuery.Type;
+export const GetTransactionsQuery = Schema.Struct({
+  type: Schema.Literal('GetTransactions'),
+  accountId: Schema.optional(Schema.UUID),
   categoryId: Schema.optional(Schema.UUID),
-  page: Schema.optional(Schema.Number),
-  pageSize: Schema.optional(Schema.Number),
+  start: Schema.optional(Schema.Date),
+  end: Schema.optional(Schema.Date),
+  page: Schema.optional(Schema.NumberFromString),
+  pageSize: Schema.optional(Schema.NumberFromString),
 });

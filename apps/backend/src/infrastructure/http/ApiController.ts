@@ -1,4 +1,5 @@
 import { Context, Effect, Layer, Schema } from 'effect';
+import { randomUUID } from 'node:crypto';
 import { CommandRouter } from '../../application/command/CommandRouter.ts';
 import { QueryRouter } from '../../application/query/QueryRouter.ts';
 import { Command } from '../../application/schema/Command.ts';
@@ -44,9 +45,9 @@ export class ApiController extends Context.Tag('ApiController')<
         });
       }
 
-      return (req) =>
-        Effect.gen(function* () {
-          const url = new URL(req.url);
+      return (req) => {
+        const url = new URL(req.url);
+        return Effect.gen(function* () {
           if (url.pathname !== '/api') {
             return yield* Effect.fail(new Error('Not Found'));
           } else if (req.method === 'POST') {
@@ -60,11 +61,20 @@ export class ApiController extends Context.Tag('ApiController')<
             return yield* Effect.fail(new Error('Method Not Allowed'));
           }
         }).pipe(
-          Effect.scoped,
           Effect.catchAllCause(webTransformer.transformError),
           Effect.flatMap(createResponse),
+          Effect.tap((response) =>
+            Effect.logInfo().pipe(
+              Effect.annotateLogs({
+                request: `${req.method} ${url.pathname}${url.search}`,
+                status: response.status,
+              }),
+            )
+          ),
+          Effect.annotateLogs('spanId', randomUUID()),
           Effect.runPromise,
         );
+      };
     }),
   );
 }
