@@ -18,7 +18,7 @@ export default function LandingPage() {
             <a href='/dashboard'>
               <Button variant='ghost'>Dashboard</Button>
             </a>
-            <a href='/transactions'>
+            <a href='/accounts/bdb5dfa5-a5bf-4a37-8afd-38bf39636155/transactions'>
               <Button>Get Started</Button>
             </a>
           </div>
@@ -41,7 +41,7 @@ export default function LandingPage() {
                 <ArrowRight class='h-5 w-5' />
               </Button>
             </a>
-            <a href='/transactions'>
+            <a href='/accounts/bdb5dfa5-a5bf-4a37-8afd-38bf39636155/transactions'>
               <Button size='lg' variant='outline' class='border-gray-200'>
                 View Transactions
               </Button>
