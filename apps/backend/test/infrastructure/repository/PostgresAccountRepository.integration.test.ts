@@ -103,7 +103,6 @@ Deno.test('PostgresAccountRepository Integration', async (t) => {
     assertExists(result);
     assertGreater(result.length, 0);
 
-    // Check account data structure
     const firstAccount = result[0];
     assertEquals('month' in firstAccount, true);
     assertEquals('accountId' in firstAccount, true);
@@ -117,7 +116,7 @@ Deno.test('PostgresAccountRepository Integration', async (t) => {
 
     const monthAccounts = result.filter((a) => a.month.toISOString() === result[0].month.toISOString());
     monthAccounts.forEach((account) => {
-      const monthChange = account.monthIncome.amount - account.monthExpenses.amount;
+      const monthChange = account.monthIncome.amount + account.monthExpenses.amount;
       assertEquals(account.monthBalance.amount, monthChange);
       assertEquals(typeof account.monthBalance.amount === 'number', true);
     });

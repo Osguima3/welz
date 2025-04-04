@@ -333,22 +333,22 @@ Implement the user interface for transaction management.
 ### **[WELZ-009][Backend] Implement basic analytics endpoints**
 
 **Description**\
-Create endpoints for basic spending insights and statistics.
+Create endpoints for basic financial analytics.
 
 **Details**
 
-- Implement category-based aggregations
-- Create monthly trend calculations
 - Add basic statistical endpoints
+- Net worth calculation endpoint
+- Top spending categories endpoint
 
 **Acceptance Criteria**
 
-- Endpoints return correct aggregated data
-- Performance is acceptable for large datasets
-- Data is properly cached
+- Net worth is correctly calculated
+- Category breakdowns are accurate
+- Performance is acceptable
 
 **Effort:** M\
-**Priority:** Mid\
+**Priority:** High\
 **Dependencies:** WELZ-006
 
 ---
@@ -379,24 +379,23 @@ Implement the visualization components for spending insights.
 ### **[WELZ-011][Backend] Implement basic insights endpoints**
 
 **Description**\
-Create endpoints for basic financial insights and analytics.
+Create endpoints for basic spending insights and statistics.
 
 **Details**
 
-- Net worth calculation endpoint
+- Implement category-based aggregations
+- Create monthly trend calculations
 - Monthly spending by category endpoint
-- Top spending categories endpoint
-- Basic trends endpoints
 
 **Acceptance Criteria**
 
-- Net worth is correctly calculated
-- Category breakdowns are accurate
 - Trend calculations work properly
-- Performance is acceptable
+- Endpoints return correct aggregated data
+- Performance is acceptable for large datasets
+- Data is properly cached
 
 **Effort:** M\
-**Priority:** High\
+**Priority:** Mid\
 **Dependencies:** WELZ-006
 
 ---

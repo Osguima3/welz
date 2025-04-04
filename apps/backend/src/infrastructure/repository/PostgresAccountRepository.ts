@@ -1,5 +1,6 @@
 import { Effect, Layer } from 'effect';
 import { Account, AccountType } from '../../../../shared/schema/Account.ts';
+import { AccountHistoryEntry } from '../../../../shared/schema/AccountHistory.ts';
 import { Money } from '../../../../shared/schema/Money.ts';
 import { UUID } from '../../../../shared/schema/UUID.ts';
 import { catchAllDie } from '../../../../shared/utils.ts';
@@ -64,7 +65,7 @@ export const PostgresAccountRepository = Layer.effect(
           const row = result.rows[0];
           return Account.make({
             ...row,
-            balance: Money.create(Number(row.balance), row.currency),
+            balance: Money.create(row.balance, row.currency),
           });
         }).pipe(
           catchAllDie('Failed to find account'),
@@ -108,7 +109,7 @@ export const PostgresAccountRepository = Layer.effect(
           const items = result.rows.map((row) =>
             Account.make({
               ...row,
-              balance: Money.create(Number(row.balance), row.currency),
+              balance: Money.create(row.balance, row.currency),
             })
           );
 
@@ -124,50 +125,106 @@ export const PostgresAccountRepository = Layer.effect(
 
       findAccountHistory: (options: FindAccountHistoryOptions = {}) =>
         Effect.gen(function* () {
+          let startDate = options.dateRange?.start;
+          const endDate = options.dateRange?.end || new Date();
+
+          if (!startDate) {
+            startDate = new Date(endDate);
+            startDate.setMonth(endDate.getMonth() - 6);
+          }
+
           let query = `
+            WITH month_series AS (
+              SELECT generate_series(
+                DATE_TRUNC('month', $1::timestamp),
+                DATE_TRUNC('month', $2::timestamp),
+                '1 month'::interval
+              )::date as month
+            ),
+            relevant_accounts AS (
+              SELECT id, name, type, currency, updated_at, balance as current_balance
+              FROM accounts
+              WHERE 1=1`;
+
+          const params: unknown[] = [startDate, endDate];
+
+          if (options.accountId) {
+            query += ` AND id = $${params.length + 1}`;
+            params.push(options.accountId);
+          }
+
+          query += `
+            ),
+            account_months AS (
+              SELECT 
+                a.id as account_id,
+                ms.month,
+                a.name,
+                a.type,
+                a.currency,
+                a.updated_at,
+                a.current_balance,
+                h.last_updated,
+                h.balance,
+                h.month_balance,
+                h.month_income,
+                h.month_expenses
+              FROM month_series ms
+              CROSS JOIN relevant_accounts a
+              LEFT JOIN account_history_view h ON 
+                h.account_id = a.id AND 
+                h.month = ms.month
+            ),
+            account_months_with_balance AS (
+              SELECT 
+                account_id,
+                month,
+                name,
+                type,
+                currency,
+                updated_at,
+                current_balance,
+                last_updated,
+                balance,
+                COALESCE(
+                  balance,
+                  FIRST_VALUE(balance) OVER (
+                    PARTITION BY account_id 
+                    ORDER BY month DESC
+                    ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+                  )
+                ) as filled_balance,
+                month_balance,
+                month_income,
+                month_expenses
+              FROM account_months
+            )
             SELECT 
               account_id as "accountId",
               month,
               name,
               type,
-              last_updated as "lastUpdated",
+              COALESCE(last_updated, updated_at) as "lastUpdated",
               currency,
-              balance,
-              month_balance as "monthBalance",
-              month_income as "monthIncome",
-              month_expenses as "monthExpenses"
-            FROM account_history_view
-            WHERE 1=1
+              COALESCE(filled_balance, current_balance, '0') as balance,
+              COALESCE(month_balance, '0') as "monthBalance",
+              COALESCE(month_income, '0') as "monthIncome",
+              COALESCE(month_expenses, '0') as "monthExpenses"
+            FROM account_months_with_balance
+            ORDER BY month DESC, balance DESC
           `;
-
-          const params: unknown[] = [];
-
-          if (options.accountId) {
-            query += ` AND account_id = $${params.length + 1}`;
-            params.push(options.accountId);
-          }
-
-          if (options.dateRange?.start) {
-            query += ` AND month >= DATE_TRUNC('month', $${params.length + 1}::timestamp)`;
-            params.push(options.dateRange.start);
-          }
-
-          if (options.dateRange?.end) {
-            query += ` AND month <= DATE_TRUNC('month', $${params.length + 1}::timestamp)`;
-            params.push(options.dateRange.end);
-          }
-
-          query += ` ORDER BY month DESC, balance DESC`;
 
           const result = yield* client.runQuery<AccountHistoryRow>(query, params);
 
-          return result.rows.map((row) => ({
-            ...row,
-            balance: Money.create(Number(row.balance), row.currency),
-            monthBalance: Money.create(Number(row.monthBalance), row.currency),
-            monthIncome: Money.create(Number(row.monthIncome), row.currency),
-            monthExpenses: Money.create(Number(row.monthExpenses), row.currency),
-          }));
+          return result.rows.map((row) =>
+            AccountHistoryEntry.make({
+              ...row,
+              balance: Money.create(row.balance, row.currency),
+              monthBalance: Money.create(row.monthBalance, row.currency),
+              monthIncome: Money.create(row.monthIncome, row.currency),
+              monthExpenses: Money.create(row.monthExpenses, row.currency),
+            })
+          );
         }).pipe(
           catchAllDie('Failed to find account history'),
         ),
@@ -212,7 +269,7 @@ export const PostgresAccountRepository = Layer.effect(
           yield* Effect.log(`Account saved: ${JSON.stringify(row)}`);
           return Account.make({
             ...row,
-            balance: Money.create(Number(row.balance), row.currency),
+            balance: Money.create(row.balance, row.currency),
           });
         }).pipe(
           catchAllDie('Failed to save account'),

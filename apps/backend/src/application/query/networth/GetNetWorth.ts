@@ -17,50 +17,25 @@ export class GetNetWorth extends Context.Tag('GetNetWorth')<
       const accountRepository = yield* AccountRepository;
       const categoryRepository = yield* CategoryRepository;
 
-      return ({ monthsOfHistory = 6, maxCategories = 3 }) =>
+      return ({ maxCategories = 3 }) =>
         transactionManager(true, () =>
           Effect.gen(function* () {
             const zero = Money.zero('EUR');
             const end = new Date();
-            const start = new Date(end.getFullYear(), end.getMonth() - monthsOfHistory + 1, 1);
+            const start = new Date(end.getFullYear(), end.getMonth(), 1);
 
             const [accountHistory, categoryHistory] = yield* Effect.all([
               accountRepository.findAccountHistory({ dateRange: { start, end } }),
               categoryRepository.findCategoryHistory({ dateRange: { start, end }, maxCategories }),
             ]);
 
-            const latestMonth = accountHistory[0]?.month ?? end;
-            const latestAccounts = accountHistory
-              .filter((a) => a.month.getTime() === latestMonth.getTime())
-              .map((a) => ({
-                ...a,
-                totalIncome: a.monthIncome,
-                totalExpenses: a.monthExpenses,
-              }));
-            const latestCategories = categoryHistory
-              .filter((c) => c.month.getTime() === latestMonth.getTime());
-
-            const monthlyTrends = accountHistory.length > 0
-              ? [...new Set(accountHistory.map((a) => a.month.getTime()))]
-                .sort((a, b) => b - a)
-                .map((timestamp) => {
-                  const month = new Date(timestamp);
-                  const accountMonths = accountHistory.filter((c) => c.month.getTime() === timestamp);
-                  return {
-                    month,
-                    balance: accountMonths.reduce(Money.reduceAdd('balance'), zero),
-                    income: accountMonths.reduce(Money.reduceAdd('monthIncome'), zero),
-                    expenses: accountMonths.reduce(Money.reduceAdd('monthExpenses'), zero),
-                  };
-                })
-              : [];
-
             return {
-              netWorth: monthlyTrends[0]?.balance ?? zero,
-              accounts: latestAccounts,
-              expenses: latestCategories.filter((c) => c.type === 'EXPENSE'),
-              incomes: latestCategories.filter((c) => c.type === 'INCOME'),
-              monthlyTrends,
+              netWorth: accountHistory.reduce(Money.reduceAdd('balance'), zero),
+              monthIncome: accountHistory.reduce(Money.reduceAdd('monthIncome'), zero),
+              monthExpenses: accountHistory.reduce(Money.reduceAdd('monthExpenses'), zero),
+              accounts: accountHistory,
+              expenses: categoryHistory.filter((c) => c.type === 'EXPENSE' && c.typePercentage > 0),
+              incomes: categoryHistory.filter((c) => c.type === 'INCOME' && c.typePercentage > 0),
             };
           }));
     }),

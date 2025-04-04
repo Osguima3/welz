@@ -44,10 +44,8 @@ Deno.test('GetAccountHistory', async (t) => {
       getAccountHistory({
         type: 'GetAccountHistory',
         accountId: '123',
-        dateRange: {
-          start: new Date(2025, 2, 1),
-          end: new Date(2025, 3, 1),
-        },
+        start: new Date(2025, 2, 1),
+        end: new Date(2025, 3, 1),
       }),
     );
 

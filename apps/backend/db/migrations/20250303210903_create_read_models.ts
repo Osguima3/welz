@@ -4,33 +4,68 @@ export default class extends AbstractMigration<ClientPostgreSQL> {
   async up(_info: Info): Promise<void> {
     await this.client.queryArray(`
       CREATE MATERIALIZED VIEW category_history_view AS
-      WITH category_history AS (
-        SELECT 
-          DATE_TRUNC('month', t.date) as month,
-          category_id,
-          currency,
-          SUM(amount) as category_total
-        FROM transactions t
-        WHERE currency = 'EUR'
-        GROUP BY month, category_id, currency
-      )
+      WITH 
+        category_transactions AS (
+          SELECT 
+            DATE_TRUNC('month', t.date) as month,
+            category_id,
+            currency,
+            SUM(amount) as category_total
+          FROM transactions t
+          WHERE currency = 'EUR'
+          GROUP BY month, category_id, currency
+        ),
+        first_transaction_dates AS (
+          SELECT
+            category_id,
+            MIN(DATE_TRUNC('month', date)) as first_month
+          FROM transactions
+          WHERE currency = 'EUR'
+          GROUP BY category_id
+        ),
+        category_months AS (
+          SELECT 
+            c.id as category_id,
+            c.type,
+            ms.month
+          FROM categories c
+          CROSS JOIN LATERAL (
+            SELECT generate_series(
+              (SELECT first_month FROM first_transaction_dates WHERE category_id = c.id),
+              CURRENT_DATE::date,
+              '1 month'::interval
+            )::date AS month
+          ) ms
+        ),
+        category_history AS (
+          SELECT 
+            cm.month,
+            cm.category_id,
+            cm.type,
+            COALESCE(ct.currency, 'EUR') as currency,
+            COALESCE(ct.category_total, 0) as category_total
+          FROM category_months cm
+          LEFT JOIN category_transactions ct ON ct.month = cm.month AND ct.category_id = cm.category_id
+        )
       SELECT 
         month,
         category_id,
         currency,
-        name,
         type,
         category_total,
-        ROUND(AVG(category_total) OVER (PARTITION BY category_id), 2) as category_average,
-        SUM(category_total) OVER (PARTITION BY month, type) as type_total,
+        ROUND(AVG(category_total) OVER (
+          PARTITION BY category_id, currency
+          ORDER BY month
+          ROWS BETWEEN 5 PRECEDING AND CURRENT ROW
+        ), 2) as category_average,
+        SUM(CASE WHEN category_total != 0 THEN category_total ELSE NULL END) OVER (PARTITION BY month, type) as type_total,
         CASE 
-          WHEN SIGN(category_total) = SIGN(SUM(category_total) OVER (PARTITION BY month, type)) 
-          THEN ROUND((100 * ABS(category_total) / SUM(ABS(category_total)) OVER (PARTITION BY month, type)), 2)
+          WHEN SIGN(category_total) = SIGN(SUM(CASE WHEN category_total != 0 THEN category_total ELSE NULL END) OVER (PARTITION BY month, type)) AND category_total != 0
+          THEN ROUND((100 * ABS(category_total) / SUM(ABS(CASE WHEN category_total != 0 THEN category_total ELSE NULL END)) OVER (PARTITION BY month, type)), 2)
           ELSE 0
         END as type_percentage,
         ROW_NUMBER() OVER (PARTITION BY month, type ORDER BY ABS(category_total) DESC) as type_rank
-      FROM category_history cms
-      LEFT JOIN categories c ON cms.category_id = c.id;
+      FROM category_history;
       
       CREATE UNIQUE INDEX idx_category_history_primary 
       ON category_history_view(month, category_id);

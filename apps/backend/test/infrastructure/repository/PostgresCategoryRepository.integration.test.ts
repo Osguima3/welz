@@ -107,8 +107,8 @@ Deno.test('PostgresCategoryRepository Integration', async (t) => {
     assertEquals('categoryId' in firstCategory, true);
     assertEquals('name' in firstCategory, true);
     assertEquals('type' in firstCategory, true);
+    assertEquals('color' in firstCategory, true);
     assertEquals('total' in firstCategory, true);
-    assertEquals('average' in firstCategory, true);
     assertEquals('typeTotal' in firstCategory, true);
     assertEquals('typePercentage' in firstCategory, true);
 

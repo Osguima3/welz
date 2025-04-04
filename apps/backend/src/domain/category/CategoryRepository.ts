@@ -1,16 +1,18 @@
 import { Context, Effect } from 'effect';
 import { Category, CategoryPage, CategoryType } from '../../../../shared/schema/Category.ts';
 import { CategoryHistory } from '../../../../shared/schema/CategoryHistory.ts';
+import { UUID } from '../../../../shared/schema/UUID.ts';
 import { DateRange } from '../common/DateRange.ts';
 
 export interface FindCategoriesOptions {
+  categoryId?: UUID;
   categoryType?: CategoryType;
   page?: number;
   pageSize?: number;
 }
 
 export interface FindCategoryHistoryOptions {
-  categoryId?: string;
+  categoryId?: UUID;
   dateRange?: DateRange;
   maxCategories?: number;
 }

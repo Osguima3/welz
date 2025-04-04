@@ -56,8 +56,7 @@ function getCategories(params: GetCategoriesParams = {}) {
 }
 
 interface GetNetWorthParams {
-  topCategoriesLimit?: string;
-  monthsOfHistory?: string;
+  maxCategories?: string;
 }
 
 function getNetWorthRequest(params: GetNetWorthParams = {}) {

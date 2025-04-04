@@ -1,4 +1,5 @@
 import { Schema } from 'effect';
+import { Color } from './Color.ts';
 import Page from './Page.ts';
 
 export const CategoryType = Schema.Literal('INCOME', 'EXPENSE');
@@ -13,6 +14,7 @@ export class Category extends Schema.Class<Category>('Category')({
     }),
   ),
   type: CategoryType,
+  color: Color,
   createdAt: Schema.Date,
 }) {}
 

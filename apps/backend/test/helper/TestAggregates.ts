@@ -7,6 +7,7 @@ import { CategoryHistoryEntry } from '../../../shared/schema/CategoryHistory.ts'
 import { Money } from '../../../shared/schema/Money.ts';
 import Page from '../../../shared/schema/Page.ts';
 import { Transaction } from '../../../shared/schema/Transaction.ts';
+import { Color } from '../../../shared/schema/Color.ts';
 
 interface BuildAccountOptions {
   id?: string;
@@ -61,6 +62,7 @@ function category(options: BuildCategoryOptions = {}): Category {
   return Category.make({
     id,
     name: options.name ?? `Test Category ${id.slice(0, 8)}`,
+    color: 'green',
     type: options.type ?? 'EXPENSE',
     createdAt: options.createdAt ?? new Date(),
   });
@@ -69,7 +71,9 @@ function category(options: BuildCategoryOptions = {}): Category {
 interface BuildCategoryHistoryOptions {
   month: Date;
   type: 'INCOME' | 'EXPENSE';
+  color?: Color;
   amount: Money;
+  forecast?: Money;
 }
 
 function categoryHistory(options: BuildCategoryHistoryOptions) {
@@ -78,8 +82,9 @@ function categoryHistory(options: BuildCategoryHistoryOptions) {
     month: options.month,
     name: 'Test Category',
     type: options.type,
+    color: options.color ?? 'green',
     total: options.amount,
-    average: options.amount,
+    forecast: options.forecast,
     typeTotal: options.amount,
     typePercentage: 100,
   });

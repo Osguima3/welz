@@ -7,6 +7,7 @@ import { QueryRouter } from '../../application/query/QueryRouter.ts';
 import { GetAccountHistory } from '../../application/query/account/GetAccountHistory.ts';
 import { GetAccounts } from '../../application/query/account/GetAccounts.ts';
 import { GetCategories } from '../../application/query/category/GetCategories.ts';
+import { GetCategoryHistory } from '../../application/query/category/GetCategoryHistory.ts';
 import { GetNetWorth } from '../../application/query/networth/GetNetWorth.ts';
 import { GetTransactions } from '../../application/query/transaction/GetTransactions.ts';
 
@@ -19,8 +20,9 @@ export const CommandLayer = CommandRouter.Live.pipe(
 export const QueryLayer = QueryRouter.Live.pipe(
   Layer.provideMerge(GetAccounts.Live),
   Layer.provideMerge(GetAccountHistory.Live),
-  Layer.provideMerge(GetTransactions.Live),
   Layer.provideMerge(GetCategories.Live),
+  Layer.provideMerge(GetCategoryHistory.Live),
+  Layer.provideMerge(GetTransactions.Live),
   Layer.provideMerge(GetNetWorth.Live),
 );
 

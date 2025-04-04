@@ -52,7 +52,7 @@ export const PostgresTransactionRepository = Layer.effect(
           const row = result.rows[0];
           return Transaction.make({
             ...row,
-            amount: Money.create(Number(row.amount), row.currency),
+            amount: Money.create(row.amount, row.currency),
             categoryId: row.categoryId || undefined,
           });
         }).pipe(
@@ -116,7 +116,7 @@ export const PostgresTransactionRepository = Layer.effect(
           const items = result.rows.map((row) =>
             Transaction.make({
               ...row,
-              amount: Money.create(Number(row.amount), row.currency),
+              amount: Money.create(row.amount, row.currency),
               categoryId: row.categoryId || undefined,
             })
           );
@@ -178,7 +178,7 @@ export const PostgresTransactionRepository = Layer.effect(
           yield* Effect.log(`Transaction saved: ${JSON.stringify(row)}`);
           return Transaction.make({
             ...row,
-            amount: Money.create(Number(row.amount), row.currency),
+            amount: Money.create(row.amount, row.currency),
             categoryId: row.categoryId || undefined,
           });
         }).pipe(

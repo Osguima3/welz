@@ -158,7 +158,7 @@ Deno.test('WebTransformer', async (t) => {
       assertEquals(response.status, 200);
       assertEquals(
         response.body,
-        `{"items":[{"id":"${id}","name":"Test Category ${idSlice}","type":"EXPENSE","createdAt":"${createdString}"}],"total":0,"page":1,"pageSize":10}`,
+        `{"items":[{"id":"${id}","name":"Test Category ${idSlice}","type":"EXPENSE","color":"green","createdAt":"${createdString}"}],"total":0,"page":1,"pageSize":10}`,
       );
     });
 

@@ -1,5 +1,7 @@
 import { Effect, Layer } from 'effect';
 import { Category, CategoryType } from '../../../../shared/schema/Category.ts';
+import { CategoryHistoryEntry } from '../../../../shared/schema/CategoryHistory.ts';
+import { Color } from '../../../../shared/schema/Color.ts';
 import { Currency } from '../../../../shared/schema/Currency.ts';
 import { Money } from '../../../../shared/schema/Money.ts';
 import { UUID } from '../../../../shared/schema/UUID.ts';
@@ -15,6 +17,7 @@ interface CategoryRow {
   id: UUID;
   name: string;
   type: CategoryType;
+  color: Color;
   createdAt: Date;
   total: string;
 }
@@ -25,6 +28,7 @@ interface CategoryHistoryRow {
   currency: Currency;
   name: string;
   type: CategoryType;
+  color: Color;
   categoryTotal: string;
   categoryAverage: string;
   typeTotal: string;
@@ -44,6 +48,7 @@ export const PostgresCategoryRepository = Layer.effect(
               id,
               name,
               type,
+              color,
               created_at as "createdAt"
             FROM categories
             WHERE id = $1
@@ -72,6 +77,7 @@ export const PostgresCategoryRepository = Layer.effect(
               id,
               name,
               type,
+              color,
               created_at as "createdAt",
               COUNT(*) OVER()::INTEGER as total
             FROM categories
@@ -80,30 +86,28 @@ export const PostgresCategoryRepository = Layer.effect(
 
           const params: unknown[] = [];
 
+          if (options.categoryId) {
+            query += ` AND id = $${params.length + 1}`;
+            params.push(options.categoryId);
+          }
+
           if (options.categoryType) {
             query += ` AND type = $${params.length + 1}`;
             params.push(options.categoryType);
           }
 
-          query += ` ORDER BY name ASC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-          params.push(pageSize, offset);
+          query += ` ORDER BY name`;
+          query += ` LIMIT ${pageSize} OFFSET ${offset}`;
 
-          const result = yield* client.runQuery<CategoryRow>(query, params);
+          const result = yield* client.runQuery<CategoryRow & { total: number }>(query, params);
 
-          if (result.rows.length === 0) {
-            return {
-              items: [],
-              total: 0,
-              page,
-              pageSize,
-            };
-          }
+          const total = result.rows.length ? result.rows[0].total : 0;
 
           return {
-            items: result.rows,
-            total: Number(result.rows[0].total),
+            items: result.rows.map((row) => Category.make(row)),
             page,
             pageSize,
+            total,
           };
         }).pipe(
           catchAllDie('Failed to find categories'),
@@ -114,28 +118,26 @@ export const PostgresCategoryRepository = Layer.effect(
           const today = new Date();
           const defaultStartDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
           const startDate = options.dateRange?.start || defaultStartDate;
-          const limit = 10;
+          const endDate = options.dateRange?.end || today;
+
+          const params: unknown[] = [startDate, endDate];
 
           let query = `
-              SELECT
-                category_id as "categoryId",
-                month,
-                currency,
-                name,
-                type,
-                category_total as "categoryTotal",
-                category_average as "categoryAverage",
-                type_total as "typeTotal",
-                type_percentage as "typePercentage"
-              FROM category_history_view 
-              WHERE month >= DATE_TRUNC('month', $1::timestamp)`;
-
-          const params: unknown[] = [startDate];
-
-          if (options.dateRange?.end) {
-            query += ` AND month <= DATE_TRUNC('month', $${params.length + 1}::timestamp)`;
-            params.push(options.dateRange.end);
-          }
+            SELECT
+              category_id as "categoryId",
+              month,
+              currency,
+              name,
+              chv.type,
+              c.color,
+              category_total as "categoryTotal",
+              category_average as "categoryAverage",
+              type_total as "typeTotal",
+              type_percentage as "typePercentage"
+            FROM category_history_view chv
+            JOIN categories c ON chv.category_id = c.id
+            WHERE month BETWEEN DATE_TRUNC('month', $1::timestamp) AND DATE_TRUNC('month', $2::timestamp)
+          `;
 
           if (options.categoryId) {
             query += ` AND category_id = $${params.length + 1}`;
@@ -147,20 +149,19 @@ export const PostgresCategoryRepository = Layer.effect(
             params.push(options.maxCategories);
           }
 
-          query += ` AND type_rank <= $${params.length + 1}`;
-          params.push(limit);
-
           query += ` ORDER BY month DESC, type, type_rank`;
 
           const result = yield* client.runQuery<CategoryHistoryRow>(query, params);
 
-          return result.rows.map((row) => ({
-            ...row,
-            total: Money.create(Number(row.categoryTotal), row.currency),
-            average: Money.create(Number(row.categoryAverage), row.currency),
-            typeTotal: Money.create(Number(row.typeTotal), row.currency),
-            typePercentage: Number(row.typePercentage),
-          }));
+          return result.rows.map((row, index) =>
+            CategoryHistoryEntry.make({
+              ...row,
+              total: Money.create(row.categoryTotal, row.currency),
+              typeTotal: Money.create(row.typeTotal, row.currency),
+              typePercentage: Number(row.typePercentage),
+              forecast: index === 0 ? Money.create(row.categoryAverage, row.currency) : undefined,
+            })
+          );
         }).pipe(
           catchAllDie('Failed to find category history'),
         ),
@@ -172,13 +173,15 @@ export const PostgresCategoryRepository = Layer.effect(
               id,
               name,
               type,
+              color,
               created_at
             ) VALUES (
-              $1, $2, $3, $4
+              $1, $2, $3, $4, $5
             )
             ON CONFLICT (id) DO UPDATE SET
               name = EXCLUDED.name,
-              type = EXCLUDED.type
+              type = EXCLUDED.type,
+              color = EXCLUDED.color
             RETURNING 
               *,
               created_at as "createdAt"
@@ -187,6 +190,7 @@ export const PostgresCategoryRepository = Layer.effect(
               category.id,
               category.name,
               category.type,
+              category.color,
               category.createdAt,
             ],
           );

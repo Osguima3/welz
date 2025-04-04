@@ -17,18 +17,22 @@ export class PostgresClient extends Context.Tag('PostgresClient')<
       const config = yield* PostgresConfig;
       const pool = new Pool(config, config.poolSize);
 
+      function connect() {
+        return Effect.tryPromise({
+          try: async () => await pool.connect(),
+          catch: (error) => new Error(`Failed to connect to the database: ${error}`),
+        });
+      }
+
       return {
-        connect: () =>
-          Effect.tryPromise({
-            try: async () => await pool.connect(),
-            catch: (error) => new Error(`Failed to connect to the database: ${error}`),
-          }),
+        connect,
 
         runQuery: <T>(query: string, args?: QueryArguments) =>
           Effect.gen(function* () {
-            yield* Effect.logInfo('Running query');
-            const connection = yield* Effect.tryPromise(() => pool.connect());
+            const connection = yield* connect();
+
             try {
+              yield* Effect.logDebug('Executing query');
               return yield* Effect.promise(() => connection.queryObject<T>(query, args));
             } finally {
               connection.release();
@@ -38,16 +42,12 @@ export class PostgresClient extends Context.Tag('PostgresClient')<
               Match.value(cause).pipe(
                 Match.when(
                   { defect: Match.instanceOf(PostgresError) },
-                  (e) =>
-                    Effect.fail(new Error(`Failed to run query: ${e.defect.message} ${query}`, { cause: e.defect })),
+                  (e) => Effect.fail(new Error(`Failed to run query: ${e.defect.message}`, { cause: e.defect })),
                 ),
-                Match.orElse((e) => Effect.fail(new Error(`Failed to run query: ${query}`, { cause: e }))),
+                Match.orElse((e) => Effect.fail(new Error(`Failed to run query`, { cause: e }))),
               )
             ),
-            Effect.annotateLogs({
-              query: query.replace(/\s+/g, ' ').trim(),
-              query_args: `[${Object.values(args ?? []).join(', ')}]`,
-            }),
+            Effect.annotateLogs({ query, query_args: args }),
           ),
 
         end: () => Effect.promise(() => pool.end()),
