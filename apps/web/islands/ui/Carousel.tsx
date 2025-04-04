@@ -4,10 +4,10 @@ import EmblaCarousel from 'embla-carousel';
 
 interface CarouselProps {
   children: JSX.Element[];
-  class?: string;
+  className?: string;
 }
 
-export default function Carousel({ children, class: className = '' }: CarouselProps) {
+export default function Carousel({ children, className = '' }: CarouselProps) {
   const [emblaApi, setEmblaApi] = useState<ReturnType<typeof EmblaCarousel>>();
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);

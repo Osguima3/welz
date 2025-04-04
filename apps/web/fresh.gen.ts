@@ -5,11 +5,16 @@
 import * as $_404 from './routes/_404.tsx';
 import * as $_app from './routes/_app.tsx';
 import * as $accounts_accountId_transactions from './routes/accounts/[accountId]/transactions.tsx';
+import * as $categories_categoryId_index from './routes/categories/[categoryId]/index.tsx';
 import * as $dashboard from './routes/dashboard.tsx';
 import * as $index from './routes/index.tsx';
-import * as $Carousel from './islands/Carousel.tsx';
-import * as $DashboardSummary from './islands/DashboardSummary.tsx';
-import * as $TransactionList from './islands/TransactionList.tsx';
+import * as $AccountHistoryCard from './islands/AccountHistoryCard.tsx';
+import * as $CategoryHistoryCard from './islands/CategoryHistoryCard.tsx';
+import * as $CategoryTransactions from './islands/CategoryTransactions.tsx';
+import * as $TransactionsContent from './islands/TransactionsContent.tsx';
+import * as $dashboard_AccountBalanceCard from './islands/dashboard/AccountBalanceCard.tsx';
+import * as $dashboard_CategorySummaryCard from './islands/dashboard/CategorySummaryCard.tsx';
+import * as $ui_Carousel from './islands/ui/Carousel.tsx';
 import type { Manifest } from '$fresh/server.ts';
 
 const manifest = {
@@ -17,13 +22,18 @@ const manifest = {
     './routes/_404.tsx': $_404,
     './routes/_app.tsx': $_app,
     './routes/accounts/[accountId]/transactions.tsx': $accounts_accountId_transactions,
+    './routes/categories/[categoryId]/index.tsx': $categories_categoryId_index,
     './routes/dashboard.tsx': $dashboard,
     './routes/index.tsx': $index,
   },
   islands: {
-    './islands/Carousel.tsx': $Carousel,
-    './islands/DashboardSummary.tsx': $DashboardSummary,
-    './islands/TransactionList.tsx': $TransactionList,
+    './islands/AccountHistoryCard.tsx': $AccountHistoryCard,
+    './islands/CategoryHistoryCard.tsx': $CategoryHistoryCard,
+    './islands/CategoryTransactions.tsx': $CategoryTransactions,
+    './islands/TransactionsContent.tsx': $TransactionsContent,
+    './islands/dashboard/AccountBalanceCard.tsx': $dashboard_AccountBalanceCard,
+    './islands/dashboard/CategorySummaryCard.tsx': $dashboard_CategorySummaryCard,
+    './islands/ui/Carousel.tsx': $ui_Carousel,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

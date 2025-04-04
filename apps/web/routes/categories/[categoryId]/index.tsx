@@ -1,61 +1,62 @@
 import { Handlers, PageProps } from '$fresh/server.ts';
-import { AccountHistory } from '@shared/schema/AccountHistory.ts';
 import { Category } from '@shared/schema/Category.ts';
-import { Money } from '@shared/schema/Money.ts';
+import { CategoryHistory } from '@shared/schema/CategoryHistory.ts';
 import { TransactionPage } from '@shared/schema/Transaction.ts';
 import { UUID } from '@shared/schema/UUID.ts';
-import { ArrowLeft, Receipt, Wallet } from 'lucide';
+import { ArrowLeft, Receipt } from 'lucide';
+import { CategoryBalanceCard } from '../../../components/CategoryBalanceCard.tsx';
+import { CategoryPercentageCard } from '../../../components/CategoryPercentageCard.tsx';
 import { ContentCard } from '../../../components/layout/ContentCard.tsx';
 import { Header } from '../../../components/layout/Header.tsx';
-import StatCard from '../../../components/layout/StatCard.tsx';
 import Button from '../../../components/ui/button.tsx';
-import { AccountHistoryCard } from '../../../islands/AccountHistoryCard.tsx';
+import CategoryHistoryCard from '../../../islands/CategoryHistoryCard.tsx';
 import TransactionsContent from '../../../islands/TransactionsContent.tsx';
 import { BackendClient } from '../../../utils/BackendClient.ts';
-import { Format } from '../../../utils/format.ts';
 
-interface AccountTransactionsPageData {
-  accountId?: UUID;
-  accountName?: string;
-  accountType?: 'CASH' | 'BANK';
-  transactions: TransactionPage;
-  accountHistory: AccountHistory;
+interface CategoryDetailsPageData {
+  categoryId: UUID;
   categories: readonly Category[];
+  categoryHistory: CategoryHistory;
+  transactions: TransactionPage;
   locale: string;
 }
 
-export const handler: Handlers<AccountTransactionsPageData> = {
+export const handler: Handlers<CategoryDetailsPageData> = {
   async GET(_req, ctx) {
     try {
-      const accountId = ctx.params.accountId;
+      const categoryId = ctx.params.categoryId;
       const client = new BackendClient();
 
-      const [accounts, accountHistory, categories, transactions] = await Promise.all([
-        client.getAccounts().then((res) => res.items),
-        client.getAccountHistory({ accountId }),
+      const [categories, categoryHistory, transactions] = await Promise.all([
         client.getCategories().then((res) => res.items),
-        client.getTransactions({ accountId }),
+        client.getCategoryHistory({ categoryId }),
+        client.getTransactions({ categoryId, pageSize: 20 }),
       ]);
 
-      const account = accounts.find((a) => a.id === accountId);
-      const accountName = account?.name;
-      const accountType = account?.type;
       const locale = 'es-ES';
 
-      return ctx.render({ accountId, accountName, accountType, transactions, accountHistory, categories, locale });
+      return ctx.render({
+        categoryId,
+        categories,
+        categoryHistory,
+        transactions,
+        locale,
+      });
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error('Error fetching category details:', error);
       return new Response('Internal Server Error', { status: 500 });
     }
   },
 };
 
-export default function AccountTransactionsPage({ data }: PageProps<AccountTransactionsPageData>) {
-  const { accountId, accountName, accountType, transactions, accountHistory, categories, locale } = data;
-  const currentBalance = accountHistory.length === 0 ? Money.zero('EUR') : accountHistory[0].balance;
+export default function CategoryDetailsPage({ data }: PageProps<CategoryDetailsPageData>) {
+  const { categoryId, categories, categoryHistory, transactions, locale } = data;
+
+  const category = categories.find((c) => c.id === categoryId);
 
   return (
     <div class='min-h-screen bg-background'>
+      {/* Header */}
       <Header />
 
       {/* Page Content */}
@@ -71,16 +72,19 @@ export default function AccountTransactionsPage({ data }: PageProps<AccountTrans
           </div>
           <div class='flex items-center gap-2'>
             <span class='text-xs font-medium px-2 py-1 rounded-full bg-muted/50'>
-              {accountType}
+              {category?.type}
             </span>
-            {accountName && <h2 class='text-xl font-semibold text-secondary pr-4'>{accountName}</h2>}
+            {category && <h2 class='text-xl font-semibold text-secondary pr-4'>{category.name}</h2>}
           </div>
         </div>
 
-        <div class='space-y-6'>
-          <StatCard icon={Wallet} title='Account Balance' value={Format.money(currentBalance)} />
+        <div class='grid gap-6 grid-cols-1 md:grid-cols-2 mb-6'>
+          <CategoryBalanceCard category={category} categoryHistory={categoryHistory} />
+          <CategoryPercentageCard category={category} categoryHistory={categoryHistory} />
+        </div>
 
-          <AccountHistoryCard accountHistory={accountHistory.toReversed()} locale={locale} />
+        <div class='space-y-6'>
+          <CategoryHistoryCard categoryHistory={categoryHistory.toReversed()} locale={locale} />
 
           <ContentCard
             icon={Receipt}
@@ -88,10 +92,11 @@ export default function AccountTransactionsPage({ data }: PageProps<AccountTrans
             contentClassName='p-0'
           >
             <TransactionsContent
-              accountId={accountId}
+              categoryId={categoryId}
               categories={categories}
               initialTransactions={transactions}
               locale={locale}
+              flipExpenses
             />
           </ContentCard>
         </div>

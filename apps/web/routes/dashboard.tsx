@@ -1,13 +1,17 @@
 import { Handlers, PageProps } from '$fresh/server.ts';
-import { Home, Wallet } from 'lucide';
-import Button from '../components/ui/button.tsx';
-import WelzLogo from '../components/WelzLogo.tsx';
-import DashboardSummary from '../islands/DashboardSummary.tsx';
-import { BackendClient } from '../utils/BackendClient.ts';
+import { Money } from '@shared/schema/Money.ts';
 import type { NetWorth } from '@shared/schema/NetWorth.ts';
+import { Banknote, ShoppingBag, Wallet } from 'lucide';
+import { Header } from '../components/layout/Header.tsx';
+import StatCard from '../components/layout/StatCard.tsx';
+import { AccountBalanceCard } from '../islands/dashboard/AccountBalanceCard.tsx';
+import { CategorySummaryCard } from '../islands/dashboard/CategorySummaryCard.tsx';
+import { BackendClient } from '../utils/BackendClient.ts';
+import { Format } from '../utils/format.ts';
 
 interface DashboardData {
   netWorth: NetWorth;
+  locale: string;
 }
 
 export const handler: Handlers<DashboardData> = {
@@ -15,7 +19,8 @@ export const handler: Handlers<DashboardData> = {
     try {
       const client = new BackendClient();
       const netWorth = await client.getNetWorth({});
-      return ctx.render({ netWorth });
+      const locale = 'es-ES';
+      return ctx.render({ netWorth, locale });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       return new Response('Internal Server Error', { status: 500 });
@@ -24,35 +29,51 @@ export const handler: Handlers<DashboardData> = {
 };
 
 export default function Dashboard({ data }: PageProps<DashboardData>) {
+  const { netWorth, locale } = data;
+
   return (
     <div class='min-h-screen bg-background'>
-      {/* Header */}
-      <div class='p-6 border-b border-gray-200 bg-muted/30'>
-        <div class='max-w-7xl mx-auto flex justify-between items-center'>
-          <div class='flex items-center gap-2'>
-            <WelzLogo size='sm' showText={false} />
-            <h1 class='text-2xl font-bold text-secondary'>Welz</h1>
-          </div>
-          <div class='flex items-center gap-4'>
-            <a href='/'>
-              <Button variant='ghost' class='gap-2'>
-                <Home class='h-4 w-4' />
-                Home
-              </Button>
-            </a>
-            <a href='/accounts/b26b6d1c-5c28-49f3-8672-a366a623670c/transactions'>
-              <Button class='gap-2'>
-                <Wallet class='h-4 w-4' />
-                Transactions
-              </Button>
-            </a>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Dashboard Content */}
       <div class='max-w-7xl mx-auto py-8 px-6'>
-        <DashboardSummary netWorth={data.netWorth} />
+        <div class='space-y-6'>
+          <div class='mb-8'>
+            <h2 class='text-3xl font-bold text-secondary mb-3'>Financial Dashboard</h2>
+            <p class='text-muted-foreground'>
+              Track your finances at a glance. View your balances, top expense categories, and recent activity.
+            </p>
+          </div>
+
+          <div class='grid gap-6 grid-cols-1 md:grid-cols-3'>
+            <StatCard
+              icon={Wallet}
+              title='Total Balance'
+              value={Format.money(netWorth.netWorth)}
+              color='primary'
+            />
+
+            <StatCard
+              icon={ShoppingBag}
+              title='Monthly Expenses'
+              value={Format.money(Money.minus(netWorth.monthExpenses))}
+              color='destructive'
+            />
+
+            <StatCard
+              icon={Banknote}
+              title='Monthly Income'
+              value={Format.money(netWorth.monthIncome)}
+              color='success'
+            />
+          </div>
+
+          <div class='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+            <AccountBalanceCard accounts={netWorth.accounts} locale={locale} />
+            <CategorySummaryCard total={netWorth.monthExpenses} categories={netWorth.expenses} locale={locale} />
+            <CategorySummaryCard total={netWorth.monthIncome} categories={netWorth.incomes} locale={locale} />
+          </div>
+        </div>
       </div>
     </div>
   );

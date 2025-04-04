@@ -3,7 +3,7 @@ import { type Money } from '@shared/schema/Money.ts';
 interface FormatMoneyOptions {
   /** The locale to use for formatting. Defaults to 'es-ES' */
   locale?: string;
-  
+
   /** How to display the currency sign. Defaults to 'auto' */
   signDisplay?: 'auto' | 'always' | 'never';
 
@@ -15,7 +15,7 @@ export class Format {
   static money(money: Money, options: FormatMoneyOptions = {}): string {
     const {
       locale = 'es-ES',
-      signDisplay = 'auto',
+      signDisplay = money.amount === 0 ? 'never' : 'auto',
       formatOptions = {},
     } = options;
 
@@ -23,11 +23,11 @@ export class Format {
       style: 'currency',
       currency: money.currency,
       signDisplay,
-      minimumFractionDigits: 0,
+      minimumFractionDigits: 2,
       maximumFractionDigits: 2,
       ...formatOptions,
     });
 
-    return formatter.format(Math.abs(money.amount));
+    return formatter.format(money.amount);
   }
 }

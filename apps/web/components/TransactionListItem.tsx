@@ -1,16 +1,20 @@
-import { ArrowDownLeft, ArrowUpRight } from 'lucide';
 import { Category } from '@shared/schema/Category.ts';
+import { Money } from '@shared/schema/Money.ts';
 import { Transaction } from '@shared/schema/Transaction.ts';
-import CategoryBadge from './CategoryBadge.tsx';
+import { ArrowDownLeft, ArrowUpRight } from 'lucide';
 import { Format } from '../utils/format.ts';
+import CategoryBadge from './CategoryBadge.tsx';
 
 interface TransactionListItemProps {
   transaction: Transaction;
   category?: Category;
+  flipExpenses?: boolean;
   locale?: string;
 }
 
-export function TransactionListItem({ transaction, category, locale = 'es-ES' }: TransactionListItemProps) {
+export function TransactionListItem(
+  { transaction, category, locale, flipExpenses = false }: TransactionListItemProps,
+) {
   const formatDate = (date: Date | string) => {
     const d = date instanceof Date ? date : new Date(date);
     return d.toLocaleDateString(locale, {
@@ -35,10 +39,14 @@ export function TransactionListItem({ transaction, category, locale = 'es-ES' }:
       </div>
       <div class='flex flex-col items-end gap-1'>
         <span class={`font-medium ${transaction.amount.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {Format.money(transaction.amount)}
+          {Format.money(
+            flipExpenses && category?.type === 'EXPENSE' ? Money.minus(transaction.amount) : transaction.amount,
+          )}
         </span>
-        {transaction.categoryId && (
-          <CategoryBadge category={category?.name ?? 'Other'} />
+        {transaction.categoryId && category && (
+          <a href={`/categories/${transaction.categoryId}`}>
+            <CategoryBadge category={category.name} color={category.color} />
+          </a>
         )}
       </div>
     </div>
