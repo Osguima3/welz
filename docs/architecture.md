@@ -925,35 +925,26 @@ export default class extends AbstractMigration {
 
 ### Local Development Setup
 
-1. **Install**
-
-```bash
-# Install Deno dependencies
-deno cache deps.ts
-```
-
-2. **Database Setup**
+1. **Database Setup**
 
 ```bash
 # Start PostgreSQL container
-docker compose up db -d
-
-# Create database
-docker compose exec db createdb -U postgres welz
+docker compose up db
 
 # Run migrations using Nessie
-deno task nessie migrate
+deno task backend:migrate
 
 # Seed initial data
-deno task nessie seed
+deno task backend:seed
 ```
 
-3. **Start Services**
+2. **Start Services**
 
 ```bash
 # Start backend and frontend
-deno task dev
+deno run --env-file backend:start
+deno run --env-file web:start
 
 # Run tests
-deno task test
+deno test -A
 ```

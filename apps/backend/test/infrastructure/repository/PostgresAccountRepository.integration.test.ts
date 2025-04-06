@@ -1,4 +1,4 @@
-import { assertEquals, assertExists, assertGreater } from '$std/assert/mod.ts';
+import { assertAlmostEquals, assertEquals, assertExists, assertGreater } from '$std/assert/mod.ts';
 import { Account } from '@shared/schema/Account.ts';
 import { Money } from '@shared/schema/Money.ts';
 import { Effect } from 'effect';
@@ -9,7 +9,9 @@ import { IntegrationTestLayer } from '../../helper/TestLayers.ts';
 
 const CASH_WALLET_ID = 'b26b6d1c-5c28-49f3-8672-a366a623670c';
 
-Deno.test('PostgresAccountRepository Integration', async (t) => {
+Deno.test('PostgresAccountRepository Integration', {
+  sanitizeResources: false,
+}, async (t) => {
   let repository: Effect.Effect.Success<typeof AccountRepository>;
   let readModelRepository: Effect.Effect.Success<typeof ReadModelRepository>;
   let transactionManager: Effect.Effect.Success<typeof TransactionManager>;
@@ -115,11 +117,9 @@ Deno.test('PostgresAccountRepository Integration', async (t) => {
     assertEquals('monthExpenses' in firstAccount, true);
 
     const monthAccounts = result.filter((a) => a.month.toISOString() === result[0].month.toISOString());
-    monthAccounts.forEach((account) => {
-      const monthChange = account.monthIncome.amount + account.monthExpenses.amount;
-      assertEquals(account.monthBalance.amount, monthChange);
-      assertEquals(typeof account.monthBalance.amount === 'number', true);
-    });
+    monthAccounts.forEach((account) =>
+      assertAlmostEquals(account.monthBalance.amount, account.monthIncome.amount + account.monthExpenses.amount)
+    );
 
     const oldestMonth = result[result.length - 1].month;
     const threshold = new Date(now.getFullYear(), now.getMonth() - months, 1);

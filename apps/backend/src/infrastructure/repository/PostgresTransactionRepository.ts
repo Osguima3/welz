@@ -58,7 +58,6 @@ export const PostgresTransactionRepository = Layer.effect(
           });
         }).pipe(
           catchAllDie('Failed to find transaction'),
-          Effect.catchAll((e) => Effect.fail(new Error(`Transaction not found: ${e.message}`, { cause: e }))),
         ),
 
       findTransactions: (options: FindTransactionsOptions) =>

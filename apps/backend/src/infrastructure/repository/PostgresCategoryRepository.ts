@@ -65,7 +65,6 @@ export const PostgresCategoryRepository = Layer.effect(
           return Category.make(row);
         }).pipe(
           catchAllDie('Failed to find category'),
-          Effect.catchAll((e) => Effect.fail(new Error(`Category not found: ${id}`, { cause: e }))),
         ),
 
       findCategories: (options: FindCategoriesOptions = {}) =>

@@ -70,7 +70,6 @@ export const PostgresAccountRepository = Layer.effect(
           });
         }).pipe(
           catchAllDie('Failed to find account'),
-          Effect.catchAll((e) => Effect.fail(new Error(`Account not found: ${id}`, { cause: e }))),
         ),
 
       findAccounts: (options: FindAccountsOptions = {}) =>

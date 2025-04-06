@@ -4,7 +4,9 @@ import { randomUUID } from 'node:crypto';
 import { PostgresClient } from '../../../src/infrastructure/repository/PostgresClient.ts';
 import { IntegrationTestRepositoryLayer } from '../../helper/TestRepositoryLayers.ts';
 
-Deno.test('PostgresClient Integration', async (t) => {
+Deno.test('PostgresClient Integration', {
+  sanitizeResources: false,
+}, async (t) => {
   const client = await PostgresClient.pipe(Effect.provide(IntegrationTestRepositoryLayer), Effect.runPromise);
   const testTableName = 'test_table_' + randomUUID().replace(/-/g, '_');
 

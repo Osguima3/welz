@@ -25,7 +25,6 @@ out/
 # dotenv environment variable files
 .env
 .env.development
-.env.test
 .env.local
 .env.production
 

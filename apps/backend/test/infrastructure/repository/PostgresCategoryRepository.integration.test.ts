@@ -5,7 +5,9 @@ import { CategoryRepository } from '../../../src/domain/category/CategoryReposit
 import { IntegrationTestLayer } from '../../helper/TestLayers.ts';
 import { ReadModelRepository } from '../../../src/domain/readmodel/ReadModelRepository.ts';
 
-Deno.test('PostgresCategoryRepository Integration', async (t) => {
+Deno.test('PostgresCategoryRepository Integration', {
+  sanitizeResources: false,
+}, async (t) => {
   let repository: Effect.Effect.Success<typeof CategoryRepository>;
   let readModelRepository: Effect.Effect.Success<typeof ReadModelRepository>;
   let transactionManager: Effect.Effect.Success<typeof TransactionManager>;

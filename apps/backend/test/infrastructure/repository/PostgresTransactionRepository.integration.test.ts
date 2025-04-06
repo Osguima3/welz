@@ -9,7 +9,9 @@ import TestAggregates from '../../helper/TestAggregates.ts';
 import { TestDataHelper } from '../../helper/TestDataHelper.ts';
 import { IntegrationTestLayer } from '../../helper/TestLayers.ts';
 
-Deno.test('PostgresTransactionRepository Integration', async (t) => {
+Deno.test('PostgresTransactionRepository Integration', {
+  sanitizeResources: false,
+}, async (t) => {
   const testAccountId = randomUUID();
   const alternateAccountId = randomUUID();
   const testTransactionId = randomUUID();

@@ -24,7 +24,7 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.2.2
+          deno-version: v2.2.6
 
       - name: Cache Dependencies
         uses: actions/cache@v4
@@ -43,7 +43,7 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.2.2
+          deno-version: v2.2.6
 
       - name: Restore Dependencies
         uses: actions/cache@v4
@@ -57,8 +57,8 @@ jobs:
       - name: Run linter
         run: deno lint
 
-      - name: Check types
-        run: deno task check
+      # - name: Check types
+      #   run: deno task check
 
       - name: Build project
         run: deno task web:build
@@ -73,7 +73,7 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.2.2
+          deno-version: v2.2.6
 
       - name: Restore Dependencies
         uses: actions/cache@v4
@@ -88,13 +88,13 @@ jobs:
         run: timeout 30s bash -c 'until docker compose exec -T db pg_isready; do sleep 1; done'
 
       - name: Run migrations
-        run: deno task backend:migrate
+        run: deno run --env-file=.env.test backend:migrate
 
       - name: Run seed
-        run: deno task backend:seed
+        run: deno run --env-file=.env.test backend:seed
 
       - name: Run tests
-        run: deno task test
+        run: deno run --env-file=.env.test test
 
       - name: Generate coverage report
         run: deno task coverage

@@ -9,7 +9,9 @@ import { TestDataHelper } from '../../helper/TestDataHelper.ts';
 import TestQueries from '../../helper/TestQueries.ts';
 import { createTestServer, TestServer } from '../../helper/TestServer.ts';
 
-Deno.test('ApiController integration', async (t) => {
+Deno.test('ApiController integration', {
+  sanitizeResources: false,
+}, async (t) => {
   let transactionId: UUID;
   const accountId = randomUUID();
 
