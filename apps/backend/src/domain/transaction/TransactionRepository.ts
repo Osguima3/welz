@@ -1,5 +1,5 @@
+import { Transaction, TransactionPage } from '@shared/schema/Transaction.ts';
 import { Context, Effect } from 'effect';
-import { Transaction, TransactionPage } from '../../../../shared/schema/Transaction.ts';
 import { DateRange } from '../common/DateRange.ts';
 
 export interface FindTransactionsOptions {

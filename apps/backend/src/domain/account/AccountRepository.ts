@@ -1,7 +1,7 @@
+import { Account, AccountPage } from '@shared/schema/Account.ts';
+import { AccountHistory } from '@shared/schema/AccountHistory.ts';
+import { UUID } from '@shared/schema/UUID.ts';
 import { Context, Effect } from 'effect';
-import { Account, AccountPage } from '../../../../shared/schema/Account.ts';
-import { AccountHistory } from '../../../../shared/schema/AccountHistory.ts';
-import { UUID } from '../../../../shared/schema/UUID.ts';
 import { DateRange } from '../common/DateRange.ts';
 
 export interface FindAccountsOptions {

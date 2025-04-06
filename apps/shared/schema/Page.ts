@@ -9,6 +9,6 @@ export default class Page {
       pageSize: Schema.Number,
     });
 
-  static empty = <A, I, R>(itemSchema: Schema.Schema<A, I, R>) =>
-    Page.of(itemSchema).make({ items: [], total: 0, page: 1, pageSize: 10 });
+  static empty = <A, I, R>(itemSchema: Schema.Schema<A, I, R>, { page = 1, pageSize = 10 } = {}) =>
+    Page.of(itemSchema).make({ items: [], total: 0, page, pageSize });
 }

@@ -1,11 +1,12 @@
+import { Currency } from '@shared/schema/Currency.ts';
+import { Money } from '@shared/schema/Money.ts';
+import { Transaction } from '@shared/schema/Transaction.ts';
+import { UUID } from '@shared/schema/UUID.ts';
+import { catchAllDie } from '@shared/utils.ts';
 import { Effect, Layer } from 'effect';
-import { Currency } from '../../../../shared/schema/Currency.ts';
-import { Money } from '../../../../shared/schema/Money.ts';
-import { Transaction } from '../../../../shared/schema/Transaction.ts';
-import { catchAllDie } from '../../../../shared/utils.ts';
 import { FindTransactionsOptions, TransactionRepository } from '../../domain/transaction/TransactionRepository.ts';
 import { PostgresClient } from './PostgresClient.ts';
-import { UUID } from '../../../../shared/schema/UUID.ts';
+import Page from '@shared/schema/Page.ts';
 
 interface TransactionRow {
   id: UUID;
@@ -57,6 +58,7 @@ export const PostgresTransactionRepository = Layer.effect(
           });
         }).pipe(
           catchAllDie('Failed to find transaction'),
+          Effect.catchAll((e) => Effect.fail(new Error(`Transaction not found: ${e.message}`, { cause: e }))),
         ),
 
       findTransactions: (options: FindTransactionsOptions) =>
@@ -110,7 +112,7 @@ export const PostgresTransactionRepository = Layer.effect(
           const result = yield* client.runQuery<TransactionRow>(query, params);
 
           if (result.rows.length === 0) {
-            return { items: [], total: 0, page, pageSize };
+            return Page.empty(Transaction, options);
           }
 
           const items = result.rows.map((row) =>
@@ -129,6 +131,7 @@ export const PostgresTransactionRepository = Layer.effect(
           };
         }).pipe(
           catchAllDie('Failed to find transactions'),
+          Effect.catchAll(() => Effect.succeed(Page.empty(Transaction, options))),
         ),
 
       save: (transaction: Transaction) =>

@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { EventBus } from '../../shared/events/EventBus.ts';
+import { EventBus } from '../../domain/events/EventBus.ts';
 import { WelzEvent } from '../schema/Event.ts';
 
 export class EventPublisher extends Context.Tag('EventPublisher')<

@@ -1,5 +1,5 @@
+import { CategoryHistory } from '@shared/schema/CategoryHistory.ts';
 import { Context, Effect, Layer } from 'effect';
-import { CategoryHistory } from '../../../../../shared/schema/CategoryHistory.ts';
 import { CategoryRepository } from '../../../domain/category/CategoryRepository.ts';
 import { GetCategoryHistoryQuery } from '../../../domain/category/queries.ts';
 import { TransactionManager } from '../../command/TransactionManager.ts';

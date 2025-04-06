@@ -1,7 +1,7 @@
 import { assertEquals } from '$std/assert/mod.ts';
+import { Transaction } from '@shared/schema/Transaction.ts';
 import { Effect } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { Transaction } from '../../../../shared/schema/Transaction.ts';
 import { TransactionManager } from '../../../src/application/command/TransactionManager.ts';
 import { CategoryRepository } from '../../../src/domain/category/CategoryRepository.ts';
 import { TransactionRepository } from '../../../src/domain/transaction/TransactionRepository.ts';

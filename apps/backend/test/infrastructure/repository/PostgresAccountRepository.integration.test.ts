@@ -1,7 +1,7 @@
 import { assertEquals, assertExists, assertGreater } from '$std/assert/mod.ts';
+import { Account } from '@shared/schema/Account.ts';
+import { Money } from '@shared/schema/Money.ts';
 import { Effect } from 'effect';
-import { Account } from '../../../../shared/schema/Account.ts';
-import { Money } from '../../../../shared/schema/Money.ts';
 import { TransactionManager } from '../../../src/application/command/TransactionManager.ts';
 import { AccountRepository } from '../../../src/domain/account/AccountRepository.ts';
 import { ReadModelRepository } from '../../../src/domain/readmodel/ReadModelRepository.ts';

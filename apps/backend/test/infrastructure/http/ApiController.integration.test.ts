@@ -1,7 +1,7 @@
 import { assertEquals } from '$std/assert/mod.ts';
+import { UUID } from '@shared/schema/UUID.ts';
 import { Effect } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { UUID } from '../../../../shared/schema/UUID.ts';
 import { ApiController } from '../../../src/infrastructure/http/ApiController.ts';
 import { LocalEnvLayer } from '../../../src/infrastructure/layer/EnvLayer.ts';
 import TestCommands from '../../helper/TestCommands.ts';

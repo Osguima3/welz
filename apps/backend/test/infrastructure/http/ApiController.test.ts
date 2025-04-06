@@ -1,9 +1,10 @@
 import { assertEquals } from '$std/assert/mod.ts';
+import { Transaction, TransactionPage } from '@shared/schema/Transaction.ts';
 import { Effect, Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { Transaction, TransactionPage } from '../../../../shared/schema/Transaction.ts';
 import { CommandRouter } from '../../../src/application/command/CommandRouter.ts';
 import { QueryRouter } from '../../../src/application/query/QueryRouter.ts';
+import { AppConfig } from '../../../src/infrastructure/config/AppConfig.ts';
 import { ApiController } from '../../../src/infrastructure/http/ApiController.ts';
 import { WebTransformer } from '../../../src/infrastructure/http/WebTransformer.ts';
 import TestAggregates from '../../helper/TestAggregates.ts';
@@ -20,6 +21,7 @@ const mockPage = TestAggregates.page(Transaction, mockTransaction);
 Deno.test('ApiController', async (t) => {
   const controller = await ApiController.pipe(
     Effect.provide(ApiController.Live),
+    Effect.provide(AppConfig.FromEnv),
     Effect.provide(WebTransformer.Live),
     Effect.provideService(CommandRouter, () => Effect.succeed(mockTransaction)),
     Effect.provideService(QueryRouter, () => Effect.succeed(mockPage)),
@@ -66,6 +68,7 @@ Deno.test('ApiController', async (t) => {
   await t.step('should handle internal errors', async () => {
     const errorController = ApiController.pipe(
       Effect.provide(ApiController.Live),
+      Effect.provide(AppConfig.FromEnv),
       Effect.provide(WebTransformer.Live),
       Effect.provideService(CommandRouter, () => Effect.fail(new Error('Internal error'))),
       Effect.provideService(QueryRouter, () => Effect.fail(new Error('Internal error'))),

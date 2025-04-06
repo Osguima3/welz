@@ -1,9 +1,9 @@
 import { assertEquals } from '$std/assert/mod.ts';
+import { Account } from '@shared/schema/Account.ts';
+import { Category } from '@shared/schema/Category.ts';
+import { Transaction } from '@shared/schema/Transaction.ts';
 import { Cause, Effect, FiberId, Option, ParseResult, SchemaAST } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { Account } from '../../../../shared/schema/Account.ts';
-import { Category } from '../../../../shared/schema/Category.ts';
-import { Transaction } from '../../../../shared/schema/Transaction.ts';
 import { WebTransformer } from '../../../src/infrastructure/http/WebTransformer.ts';
 import TestAggregates from '../../helper/TestAggregates.ts';
 

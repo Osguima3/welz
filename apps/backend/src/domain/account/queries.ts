@@ -1,5 +1,5 @@
+import { AccountType } from '@shared/schema/Account.ts';
 import { Schema } from 'effect';
-import { AccountType } from '../../../../shared/schema/Account.ts';
 
 export type GetAccountsQuery = typeof GetAccountsQuery.Type;
 export const GetAccountsQuery = Schema.Struct({

@@ -6,7 +6,8 @@ import { Header } from '../components/layout/Header.tsx';
 import StatCard from '../components/layout/StatCard.tsx';
 import { AccountBalanceCard } from '../islands/dashboard/AccountBalanceCard.tsx';
 import { CategorySummaryCard } from '../islands/dashboard/CategorySummaryCard.tsx';
-import { BackendClient } from '../utils/BackendClient.ts';
+import { BACKEND_URL } from '../utils/env.ts';
+import { BackendClient } from '../services/BackendClient.ts';
 import { Format } from '../utils/format.ts';
 
 interface DashboardData {
@@ -17,8 +18,8 @@ interface DashboardData {
 export const handler: Handlers<DashboardData> = {
   async GET(_req, ctx) {
     try {
-      const client = new BackendClient();
-      const netWorth = await client.getNetWorth({});
+      const client = new BackendClient(BACKEND_URL);
+      const netWorth = await client.getNetWorth();
       const locale = 'es-ES';
       return ctx.render({ netWorth, locale });
     } catch (error) {

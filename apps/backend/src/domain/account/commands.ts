@@ -1,5 +1,5 @@
+import { Money } from '@shared/schema/Money.ts';
 import { Schema } from 'effect';
-import { Money } from '../../../../shared/schema/Money.ts';
 
 export const UpdateBalanceCommand = Schema.Struct({
   accountId: Schema.UUID,

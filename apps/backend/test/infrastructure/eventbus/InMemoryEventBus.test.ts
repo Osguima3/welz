@@ -1,11 +1,11 @@
 import { assertEquals } from '$std/assert/mod.ts';
+import { Money } from '@shared/schema/Money.ts';
 import { Effect } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { Money } from '../../../../shared/schema/Money.ts';
 import { WelzEvent } from '../../../src/application/schema/Event.ts';
+import { EventBus } from '../../../src/domain/events/EventBus.ts';
 import { TransactionCreatedEvent } from '../../../src/domain/transaction/events.ts';
 import { InMemoryEventBus } from '../../../src/infrastructure/eventbus/InMemoryEventBus.ts';
-import { EventBus } from '../../../src/shared/events/EventBus.ts';
 
 const mockEvent = TransactionCreatedEvent.make({
   type: 'TransactionCreated',

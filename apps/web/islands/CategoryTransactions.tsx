@@ -7,18 +7,20 @@ import { useEffect, useRef } from 'preact/hooks';
 import { TransactionListItem } from '../components/TransactionListItem.tsx';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card.tsx';
 import Button from '../components/ui/button.tsx';
-import { BackendClient } from '../utils/BackendClient.ts';
+import { BackendClient } from '../services/BackendClient.ts';
 
 interface CategoryTransactionsProps {
   categoryId: UUID;
   category?: Category;
   initialTransactions: TransactionPage;
+  backendUrl: string;
 }
 
 export default function CategoryTransactions({
   categoryId,
   category,
   initialTransactions,
+  backendUrl,
 }: CategoryTransactionsProps) {
   const transactions = useSignal<readonly Transaction[]>(initialTransactions.items);
   const currentPage = useSignal(1);
@@ -32,7 +34,7 @@ export default function CategoryTransactions({
     try {
       isLoading.value = true;
       const nextPage = currentPage.value + 1;
-      const client = new BackendClient();
+      const client = new BackendClient(backendUrl);
       const data = await client.getTransactions({ categoryId, page: nextPage });
 
       transactions.value = [...transactions.value, ...data.items];

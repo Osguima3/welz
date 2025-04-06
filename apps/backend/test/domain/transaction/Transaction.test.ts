@@ -1,7 +1,7 @@
 import { assertEquals, assertExists, assertStringIncludes } from '$std/assert/mod.ts';
+import { Transaction } from '@shared/schema/Transaction.ts';
 import { Effect, ParseResult } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { Transaction } from '../../../../shared/schema/Transaction.ts';
 import { CreateTransactionCommand } from '../../../src/domain/transaction/commands.ts';
 import TestCommands from '../../helper/TestCommands.ts';
 

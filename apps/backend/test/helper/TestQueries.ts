@@ -1,12 +1,12 @@
+import { AccountType } from '@shared/schema/Account.ts';
+import { CategoryType } from '@shared/schema/Category.ts';
+import { UUID } from '@shared/schema/UUID.ts';
 import { Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { AccountType } from '../../../shared/schema/Account.ts';
-import { CategoryType } from '../../../shared/schema/Category.ts';
 import { GetAccountsQuery } from '../../src/domain/account/queries.ts';
 import { GetCategoriesQuery } from '../../src/domain/category/queries.ts';
 import { GetNetWorthQuery } from '../../src/domain/networth/queries.ts';
 import { GetTransactionsQuery } from '../../src/domain/transaction/queries.ts';
-import { UUID } from '../../../shared/schema/UUID.ts';
 
 interface GetAccountsParams {
   accountType?: AccountType;

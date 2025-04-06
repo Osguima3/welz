@@ -1,5 +1,5 @@
+import { CategoryType } from '@shared/schema/Category.ts';
 import { Schema } from 'effect';
-import { CategoryType } from '../../../../shared/schema/Category.ts';
 
 export type GetCategoriesQuery = typeof GetCategoriesQuery.Type;
 export const GetCategoriesQuery = Schema.Struct({

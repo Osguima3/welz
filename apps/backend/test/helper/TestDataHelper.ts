@@ -1,6 +1,6 @@
+import { UUID } from '@shared/schema/UUID.ts';
 import { Context, Effect, Layer } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { UUID } from '../../../shared/schema/UUID.ts';
 import { TransactionManager } from '../../src/application/command/TransactionManager.ts';
 import { PostgresClient } from '../../src/infrastructure/repository/PostgresClient.ts';
 

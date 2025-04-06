@@ -1,5 +1,5 @@
+import { Currency } from '@shared/schema/Currency.ts';
 import { Schema } from 'effect';
-import { Currency } from '../../../../shared/schema/Currency.ts';
 import { DateRange } from '../common/DateRange.ts';
 
 export type GetNetWorthHistoryQuery = typeof GetNetWorthHistoryQuery.Type;

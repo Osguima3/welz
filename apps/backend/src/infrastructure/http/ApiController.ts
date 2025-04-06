@@ -4,6 +4,7 @@ import { CommandRouter } from '../../application/command/CommandRouter.ts';
 import { QueryRouter } from '../../application/query/QueryRouter.ts';
 import { Command } from '../../application/schema/Command.ts';
 import { Query } from '../../application/schema/Query.ts';
+import { AppConfig } from '../config/AppConfig.ts';
 import { WebResponse, WebTransformer } from './WebTransformer.ts';
 
 export class ApiController extends Context.Tag('ApiController')<
@@ -16,6 +17,7 @@ export class ApiController extends Context.Tag('ApiController')<
       const routeCommand = yield* CommandRouter;
       const routeQuery = yield* QueryRouter;
       const webTransformer = yield* WebTransformer;
+      const config = yield* AppConfig;
 
       function handleCommand(input: unknown): Effect.Effect<WebResponse, Error> {
         return Effect.gen(function* () {
@@ -35,7 +37,7 @@ export class ApiController extends Context.Tag('ApiController')<
 
       const corsHeaders = {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'http://localhost:8001',
+        'Access-Control-Allow-Origin': config.backend.corsOrigin,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       };

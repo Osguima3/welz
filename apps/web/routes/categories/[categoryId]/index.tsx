@@ -11,7 +11,8 @@ import { Header } from '../../../components/layout/Header.tsx';
 import Button from '../../../components/ui/button.tsx';
 import CategoryHistoryCard from '../../../islands/CategoryHistoryCard.tsx';
 import TransactionsContent from '../../../islands/TransactionsContent.tsx';
-import { BackendClient } from '../../../utils/BackendClient.ts';
+import { BACKEND_URL } from '../../../utils/env.ts';
+import { BackendClient } from '../../../services/BackendClient.ts';
 
 interface CategoryDetailsPageData {
   categoryId: UUID;
@@ -25,7 +26,7 @@ export const handler: Handlers<CategoryDetailsPageData> = {
   async GET(_req, ctx) {
     try {
       const categoryId = ctx.params.categoryId;
-      const client = new BackendClient();
+      const client = new BackendClient(BACKEND_URL);
 
       const [categories, categoryHistory, transactions] = await Promise.all([
         client.getCategories().then((res) => res.items),
@@ -95,6 +96,7 @@ export default function CategoryDetailsPage({ data }: PageProps<CategoryDetailsP
               categoryId={categoryId}
               categories={categories}
               initialTransactions={transactions}
+              backendUrl={BACKEND_URL}
               locale={locale}
               flipExpenses
             />

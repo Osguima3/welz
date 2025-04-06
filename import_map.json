@@ -1,0 +1,20 @@
+{
+  "imports": {
+    "@shared/": "./apps/shared/",
+    "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
+    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
+    "lucide": "https://esm.sh/lucide-preact@0.363.0",
+    "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "$nessie/": "https://deno.land/x/nessie@2.0.11/",
+    "$std/": "https://deno.land/std@0.224.0/",
+    "effect": "npm:effect@3.13.2",
+    "postgres/": "https://deno.land/x/postgres@v0.17.0/",
+    "preact": "https://esm.sh/preact@10.22.0",
+    "preact/": "https://esm.sh/preact@10.22.0/",
+    "tailwindcss": "npm:tailwindcss@3.4.1",
+    "tailwindcss/": "npm:/tailwindcss@3.4.1/",
+    "tailwindcss/plugin": "npm:/tailwindcss@3.4.1/plugin.js",
+    "embla-carousel": "https://esm.sh/embla-carousel@8.0.0",
+    "chart.js": "npm:chart.js@4.4.1"
+  }
+}

@@ -1,5 +1,5 @@
 import { Context, Effect, Layer } from 'effect';
-import { TransactionPage } from '../../../../../shared/schema/Transaction.ts';
+import { TransactionPage } from '@shared/schema/Transaction.ts';
 import { GetTransactionsQuery } from '../../../domain/transaction/queries.ts';
 import { TransactionRepository } from '../../../domain/transaction/TransactionRepository.ts';
 import { TransactionManager } from '../../command/TransactionManager.ts';

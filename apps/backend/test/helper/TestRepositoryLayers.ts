@@ -1,8 +1,8 @@
 import { Effect, Layer } from 'effect';
+import { AppConfig } from '../../src/infrastructure/config/AppConfig.ts';
 import { TransactionManager } from '../../src/application/command/TransactionManager.ts';
 import { RepositoryLayer } from '../../src/infrastructure/layer/RepositoryLayer.ts';
 import { PostgresClient } from '../../src/infrastructure/repository/PostgresClient.ts';
-import { PostgresConfig } from '../../src/infrastructure/repository/PostgresConfig.ts';
 import { TestDataHelper } from './TestDataHelper.ts';
 
 export const UnitTestRepositoryLayer = Layer.succeed(
@@ -19,5 +19,5 @@ export const UnitTestRepositoryLayer = Layer.succeed(
 
 export const IntegrationTestRepositoryLayer = TestDataHelper.Live.pipe(
   Layer.provideMerge(RepositoryLayer),
-  Layer.provide(PostgresConfig.Local),
+  Layer.provide(AppConfig.FromEnv),
 );

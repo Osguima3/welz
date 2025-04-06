@@ -1,17 +1,13 @@
 import { ClientPostgreSQL, NessieConfig } from '$nessie/mod.ts';
 
-const client = new ClientPostgreSQL({
-  database: 'welz_db',
-  hostname: 'localhost',
-  port: 5432,
-  user: 'user',
-  password: 'password',
-});
-
-const config: NessieConfig = {
-  client,
+export default {
+  client: new ClientPostgreSQL({
+    hostname: Deno.env.get('DATABASE_HOST'),
+    port: Number(Deno.env.get('DATABASE_PORT')),
+    database: Deno.env.get('DATABASE_NAME'),
+    user: Deno.env.get('DATABASE_USER'),
+    password: Deno.env.get('DATABASE_PASSWORD'),
+  }),
   migrationFolders: ['./db/migrations'],
   seedFolders: ['./db/seeds'],
-};
-
-export default config;
+} as NessieConfig;

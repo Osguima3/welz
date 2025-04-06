@@ -1,6 +1,6 @@
 import { AbstractSeed, ClientPostgreSQL, Info } from '$nessie/mod.ts';
-import { Currency } from '../../../shared/schema/Currency.ts';
-import { Money } from '../../../shared/schema/Money.ts';
+import { Currency } from '@shared/schema/Currency.ts';
+import { Money } from '@shared/schema/Money.ts';
 
 interface MockTransaction {
   accountId: string;

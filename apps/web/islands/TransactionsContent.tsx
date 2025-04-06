@@ -5,13 +5,14 @@ import type { UUID } from '@shared/schema/UUID.ts';
 import { Filter, Search } from 'lucide';
 import { useEffect, useRef } from 'preact/hooks';
 import { TransactionListItem } from '../components/TransactionListItem.tsx';
-import { BackendClient } from '../utils/BackendClient.ts';
+import { BackendClient } from '../services/BackendClient.ts';
 
 interface TransactionsContentProps {
   accountId?: UUID;
   categoryId?: UUID;
   categories: readonly Category[];
   initialTransactions: TransactionPage;
+  backendUrl: string;
   locale: string;
   flipExpenses?: boolean;
 }
@@ -21,6 +22,7 @@ export default function TransactionsContent({
   categoryId,
   categories,
   initialTransactions,
+  backendUrl,
   locale,
   flipExpenses = false,
 }: TransactionsContentProps) {
@@ -49,7 +51,7 @@ export default function TransactionsContent({
     try {
       isLoading.value = true;
       const nextPage = currentPage.value + 1;
-      const client = new BackendClient();
+      const client = new BackendClient(backendUrl);
       const data = await client.getTransactions({ accountId, categoryId, page: nextPage });
 
       transactions.value = [...transactions.value, ...data.items];

@@ -1,6 +1,6 @@
+import { Transaction } from '@shared/schema/Transaction.ts';
 import { Context, Effect, Layer, ParseResult } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { Transaction } from '../../../../../shared/schema/Transaction.ts';
 import { CreateTransactionCommand } from '../../../domain/transaction/commands.ts';
 import { TransactionRepository } from '../../../domain/transaction/TransactionRepository.ts';
 import { EventPublisher } from '../EventPublisher.ts';

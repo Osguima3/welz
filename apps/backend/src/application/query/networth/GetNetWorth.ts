@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from 'effect';
-import { Money } from '../../../../../shared/schema/Money.ts';
-import { NetWorth } from '../../../../../shared/schema/NetWorth.ts';
+import { Money } from '@shared/schema/Money.ts';
+import { NetWorth } from '@shared/schema/NetWorth.ts';
 import { AccountRepository } from '../../../domain/account/AccountRepository.ts';
 import { CategoryRepository } from '../../../domain/category/CategoryRepository.ts';
 import { GetNetWorthQuery } from '../../../domain/networth/queries.ts';

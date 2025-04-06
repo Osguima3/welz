@@ -1,7 +1,7 @@
 import { AbstractSeed, ClientPostgreSQL, Info } from '$nessie/mod.ts';
 import { randomUUID } from 'node:crypto';
-import { AccountType } from '../../../shared/schema/Account.ts';
-import { Money } from '../../../shared/schema/Money.ts';
+import { AccountType } from '@shared/schema/Account.ts';
+import { Money } from '@shared/schema/Money.ts';
 
 interface AccountSeed {
   id: string;

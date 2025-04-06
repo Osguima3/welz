@@ -1,8 +1,8 @@
 import { assertEquals } from '$std/assert/mod.ts';
+import { Money } from '@shared/schema/Money.ts';
 import { Effect, Layer } from 'effect';
 import { GetAccountHistory } from '../../../../src/application/query/account/GetAccountHistory.ts';
 import { AccountRepository } from '../../../../src/domain/account/AccountRepository.ts';
-import { Money } from '../../../../../shared/schema/Money.ts';
 import TestAggregates from '../../../helper/TestAggregates.ts';
 import { UnitTestLayer } from '../../../helper/TestLayers.ts';
 

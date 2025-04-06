@@ -70,7 +70,7 @@ export function CategorySummaryCard({
             </div>
           </div>
         )
-        : <p class='text-muted-foreground text-sm text-center'>No data available</p>}
+        : <p class='text-muted-foreground text-sm text-center pt-6'>No data available</p>}
     </ContentCard>
   );
 }

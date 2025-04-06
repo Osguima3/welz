@@ -1,13 +1,13 @@
+import { Account, AccountType } from '@shared/schema/Account.ts';
+import { AccountHistoryEntry } from '@shared/schema/AccountHistory.ts';
+import { Category, CategoryType } from '@shared/schema/Category.ts';
+import { CategoryHistoryEntry } from '@shared/schema/CategoryHistory.ts';
+import { Color } from '@shared/schema/Color.ts';
+import { Money } from '@shared/schema/Money.ts';
+import Page from '@shared/schema/Page.ts';
+import { Transaction } from '@shared/schema/Transaction.ts';
 import { Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { Account, AccountType } from '../../../shared/schema/Account.ts';
-import { AccountHistoryEntry } from '../../../shared/schema/AccountHistory.ts';
-import { Category, CategoryType } from '../../../shared/schema/Category.ts';
-import { CategoryHistoryEntry } from '../../../shared/schema/CategoryHistory.ts';
-import { Money } from '../../../shared/schema/Money.ts';
-import Page from '../../../shared/schema/Page.ts';
-import { Transaction } from '../../../shared/schema/Transaction.ts';
-import { Color } from '../../../shared/schema/Color.ts';
 
 interface BuildAccountOptions {
   id?: string;

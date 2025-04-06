@@ -1,7 +1,7 @@
-import { Context, Effect, Layer, Match } from 'effect';
+import { Context, Effect, Layer, Match, Redacted } from 'effect';
 import { Pool, PostgresError } from 'postgres/mod.ts';
 import { QueryArguments } from 'postgres/query/query.ts';
-import { PostgresConfig } from './PostgresConfig.ts';
+import { AppConfig } from '../config/AppConfig.ts';
 
 export class PostgresClient extends Context.Tag('PostgresClient')<
   PostgresClient,
@@ -14,8 +14,18 @@ export class PostgresClient extends Context.Tag('PostgresClient')<
   static Live = Layer.scoped(
     PostgresClient,
     Effect.gen(function* () {
-      const config = yield* PostgresConfig;
-      const pool = new Pool(config, config.poolSize);
+      const config = yield* AppConfig;
+      const pool = new Pool(
+        {
+          hostname: config.database.host,
+          port: config.database.port,
+          database: config.database.name,
+          user: config.database.user,
+          password: Redacted.value(config.database.password),
+        },
+        config.database.poolSize,
+        true,
+      );
 
       function connect() {
         return Effect.tryPromise({

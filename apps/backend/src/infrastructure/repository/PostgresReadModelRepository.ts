@@ -1,5 +1,5 @@
+import { catchAllDie } from '@shared/utils.ts';
 import { Effect, Layer } from 'effect';
-import { catchAllDie } from '../../../../shared/utils.ts';
 import { ReadModelRepository } from '../../domain/readmodel/ReadModelRepository.ts';
 import { PostgresClient } from './PostgresClient.ts';
 

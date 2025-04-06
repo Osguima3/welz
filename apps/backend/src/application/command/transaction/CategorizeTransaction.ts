@@ -1,5 +1,5 @@
+import { Transaction } from '@shared/schema/Transaction.ts';
 import { Context, Effect, Layer } from 'effect';
-import { Transaction } from '../../../../../shared/schema/Transaction.ts';
 import { CategorizeTransactionCommand } from '../../../domain/transaction/commands.ts';
 import { TransactionRepository } from '../../../domain/transaction/TransactionRepository.ts';
 import { EventPublisher } from '../EventPublisher.ts';

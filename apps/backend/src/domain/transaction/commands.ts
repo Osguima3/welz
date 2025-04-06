@@ -1,5 +1,5 @@
+import { Money } from '@shared/schema/Money.ts';
 import { Schema } from 'effect';
-import { Money } from '../../../../shared/schema/Money.ts';
 
 export type CreateTransactionCommand = typeof CreateTransactionCommand.Type;
 export const CreateTransactionCommand = Schema.Struct({

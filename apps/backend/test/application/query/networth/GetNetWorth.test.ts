@@ -1,6 +1,6 @@
 import { assertEquals } from '$std/assert/mod.ts';
+import { Money } from '@shared/schema/Money.ts';
 import { Effect, Layer } from 'effect';
-import { Money } from '../../../../../shared/schema/Money.ts';
 import { GetNetWorth } from '../../../../src/application/query/networth/GetNetWorth.ts';
 import { AccountRepository } from '../../../../src/domain/account/AccountRepository.ts';
 import { CategoryRepository } from '../../../../src/domain/category/CategoryRepository.ts';

@@ -1,6 +1,6 @@
+import { UUID } from '@shared/schema/UUID.ts';
 import { Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { UUID } from '../../../shared/schema/UUID.ts';
 import { CategorizeTransactionCommand, CreateTransactionCommand } from '../../src/domain/transaction/commands.ts';
 
 function createTransactionRequest(accountId: UUID = randomUUID(), categoryId: UUID | undefined = undefined) {

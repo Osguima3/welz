@@ -60,6 +60,9 @@ jobs:
       - name: Check types
         run: deno task check
 
+      - name: Build project
+        run: deno task web:build
+
   test:
     needs: [setup, build]
     runs-on: ubuntu-latest
@@ -79,13 +82,16 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Start database
-        run: docker compose up -d db
+        run: docker compose up -d
 
       - name: Wait for database
         run: timeout 30s bash -c 'until docker compose exec -T db pg_isready; do sleep 1; done'
 
       - name: Run migrations
         run: deno task backend:migrate
+
+      - name: Run seed
+        run: deno task backend:seed
 
       - name: Run tests
         run: deno task test
@@ -103,3 +109,28 @@ jobs:
       - name: Stop database
         if: always()
         run: docker compose down
+
+  deploy:
+    needs: [setup, build, test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Upload Backend to Deno Deploy
+        uses: denoland/deployctl@v1
+        with:
+          project: 'welz-backend'
+          entrypoint: 'apps/backend/src/main.ts'
+          include: 'apps/backend,apps/shared'
+          import-map: 'import_map.json'
+
+      - name: Upload Web to Deno Deploy
+        uses: denoland/deployctl@v1
+        with:
+          project: 'welz'
+          entrypoint: 'apps/web/main.ts'
+          include: 'apps/web,apps/shared'
+          import-map: 'import_map.json'

@@ -56,7 +56,7 @@ export function AccountBalanceCard({ accounts, locale }: AccountBalanceCardProps
             </Carousel>
           </>
         )
-        : <p class='text-muted-foreground text-sm text-center'>No account data available</p>}
+        : <p class='text-muted-foreground text-sm text-center pt-6'>No account data available</p>}
     </ContentCard>
   );
 }

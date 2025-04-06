@@ -1,7 +1,7 @@
+import { catchAllDie } from '@shared/utils.ts';
 import { Effect, Layer } from 'effect';
-import { catchAllDie } from '../../../../shared/utils.ts';
 import { EventType, WelzEvent } from '../../application/schema/Event.ts';
-import { EventBus, EventListener } from '../../shared/events/EventBus.ts';
+import { EventBus, EventListener } from '../../domain/events/EventBus.ts';
 
 export const InMemoryEventBus = Layer.effect(
   EventBus,

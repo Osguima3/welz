@@ -1,15 +1,16 @@
+import { Account, AccountType } from '@shared/schema/Account.ts';
+import { AccountHistoryEntry } from '@shared/schema/AccountHistory.ts';
+import { Money } from '@shared/schema/Money.ts';
+import { UUID } from '@shared/schema/UUID.ts';
+import { catchAllDie } from '@shared/utils.ts';
 import { Effect, Layer } from 'effect';
-import { Account, AccountType } from '../../../../shared/schema/Account.ts';
-import { AccountHistoryEntry } from '../../../../shared/schema/AccountHistory.ts';
-import { Money } from '../../../../shared/schema/Money.ts';
-import { UUID } from '../../../../shared/schema/UUID.ts';
-import { catchAllDie } from '../../../../shared/utils.ts';
 import {
   AccountRepository,
   FindAccountHistoryOptions,
   FindAccountsOptions,
 } from '../../domain/account/AccountRepository.ts';
 import { PostgresClient } from './PostgresClient.ts';
+import Page from '@shared/schema/Page.ts';
 
 interface AccountRow {
   id: UUID;
@@ -69,6 +70,7 @@ export const PostgresAccountRepository = Layer.effect(
           });
         }).pipe(
           catchAllDie('Failed to find account'),
+          Effect.catchAll((e) => Effect.fail(new Error(`Account not found: ${id}`, { cause: e }))),
         ),
 
       findAccounts: (options: FindAccountsOptions = {}) =>
@@ -98,12 +100,7 @@ export const PostgresAccountRepository = Layer.effect(
           const result = yield* client.runQuery<AccountRow>(query, params);
 
           if (result.rows.length === 0) {
-            return {
-              items: [],
-              total: 0,
-              page,
-              pageSize,
-            };
+            return Page.empty(Account, options);
           }
 
           const items = result.rows.map((row) =>
@@ -121,6 +118,7 @@ export const PostgresAccountRepository = Layer.effect(
           };
         }).pipe(
           catchAllDie('Failed to find accounts'),
+          Effect.catchAll(() => Effect.succeed(Page.empty(Account, options))),
         ),
 
       findAccountHistory: (options: FindAccountHistoryOptions = {}) =>
@@ -227,6 +225,7 @@ export const PostgresAccountRepository = Layer.effect(
           );
         }).pipe(
           catchAllDie('Failed to find account history'),
+          Effect.catchAll(() => Effect.succeed([])),
         ),
 
       save: (account: Account) =>

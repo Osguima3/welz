@@ -1,6 +1,6 @@
+import { Money } from '@shared/schema/Money.ts';
 import { Schema } from 'effect';
 import { EventMetadata } from '../common/EventMetadata.ts';
-import { Money } from '../../../../shared/schema/Money.ts';
 
 export type TransactionCreatedEvent = typeof TransactionCreatedEvent.Type;
 export const TransactionCreatedEvent = Schema.Struct({

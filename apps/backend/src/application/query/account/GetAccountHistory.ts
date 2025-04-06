@@ -1,5 +1,5 @@
 import { Context, Effect, Layer } from 'effect';
-import { AccountHistory } from '../../../../../shared/schema/AccountHistory.ts';
+import { AccountHistory } from '@shared/schema/AccountHistory.ts';
 import { AccountRepository } from '../../../domain/account/AccountRepository.ts';
 import { GetAccountHistoryQuery } from '../../../domain/account/queries.ts';
 import { TransactionManager } from '../../command/TransactionManager.ts';

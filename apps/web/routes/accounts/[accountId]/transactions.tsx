@@ -11,8 +11,9 @@ import StatCard from '../../../components/layout/StatCard.tsx';
 import Button from '../../../components/ui/button.tsx';
 import { AccountHistoryCard } from '../../../islands/AccountHistoryCard.tsx';
 import TransactionsContent from '../../../islands/TransactionsContent.tsx';
-import { BackendClient } from '../../../utils/BackendClient.ts';
+import { BackendClient } from '../../../services/BackendClient.ts';
 import { Format } from '../../../utils/format.ts';
+import { BACKEND_URL } from '../../../utils/env.ts';
 
 interface AccountTransactionsPageData {
   accountId?: UUID;
@@ -28,7 +29,7 @@ export const handler: Handlers<AccountTransactionsPageData> = {
   async GET(_req, ctx) {
     try {
       const accountId = ctx.params.accountId;
-      const client = new BackendClient();
+      const client = new BackendClient(BACKEND_URL);
 
       const [accounts, accountHistory, categories, transactions] = await Promise.all([
         client.getAccounts().then((res) => res.items),
@@ -91,6 +92,7 @@ export default function AccountTransactionsPage({ data }: PageProps<AccountTrans
               accountId={accountId}
               categories={categories}
               initialTransactions={transactions}
+              backendUrl={BACKEND_URL}
               locale={locale}
             />
           </ContentCard>

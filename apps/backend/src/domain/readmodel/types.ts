@@ -1,6 +1,6 @@
-import { AccountType } from '../../../../shared/schema/Account.ts';
-import { CategoryType } from '../../../../shared/schema/Category.ts';
-import { Money } from '../../../../shared/schema/Money.ts';
+import { AccountType } from '@shared/schema/Account.ts';
+import { CategoryType } from '@shared/schema/Category.ts';
+import { Money } from '@shared/schema/Money.ts';
 
 export interface AccountReadModel {
   accountId: string;

@@ -1,17 +1,18 @@
+import { Category, CategoryType } from '@shared/schema/Category.ts';
+import { CategoryHistoryEntry } from '@shared/schema/CategoryHistory.ts';
+import { Color } from '@shared/schema/Color.ts';
+import { Currency } from '@shared/schema/Currency.ts';
+import { Money } from '@shared/schema/Money.ts';
+import { UUID } from '@shared/schema/UUID.ts';
+import { catchAllDie } from '@shared/utils.ts';
 import { Effect, Layer } from 'effect';
-import { Category, CategoryType } from '../../../../shared/schema/Category.ts';
-import { CategoryHistoryEntry } from '../../../../shared/schema/CategoryHistory.ts';
-import { Color } from '../../../../shared/schema/Color.ts';
-import { Currency } from '../../../../shared/schema/Currency.ts';
-import { Money } from '../../../../shared/schema/Money.ts';
-import { UUID } from '../../../../shared/schema/UUID.ts';
-import { catchAllDie } from '../../../../shared/utils.ts';
 import {
   CategoryRepository,
   FindCategoriesOptions,
   FindCategoryHistoryOptions,
 } from '../../domain/category/CategoryRepository.ts';
 import { PostgresClient } from './PostgresClient.ts';
+import Page from '@shared/schema/Page.ts';
 
 interface CategoryRow {
   id: UUID;
@@ -64,6 +65,7 @@ export const PostgresCategoryRepository = Layer.effect(
           return Category.make(row);
         }).pipe(
           catchAllDie('Failed to find category'),
+          Effect.catchAll((e) => Effect.fail(new Error(`Category not found: ${id}`, { cause: e }))),
         ),
 
       findCategories: (options: FindCategoriesOptions = {}) =>
@@ -99,15 +101,17 @@ export const PostgresCategoryRepository = Layer.effect(
           query += ` ORDER BY name`;
           query += ` LIMIT ${pageSize} OFFSET ${offset}`;
 
-          const result = yield* client.runQuery<CategoryRow & { total: number }>(query, params);
+          const result = yield* client.runQuery<CategoryRow>(query, params);
 
-          const total = result.rows.length ? result.rows[0].total : 0;
+          if (result.rows.length === 0) {
+            return Page.empty(Category, options);
+          }
 
           return {
             items: result.rows.map((row) => Category.make(row)),
             page,
             pageSize,
-            total,
+            total: Number(result.rows[0].total),
           };
         }).pipe(
           catchAllDie('Failed to find categories'),
@@ -164,6 +168,7 @@ export const PostgresCategoryRepository = Layer.effect(
           );
         }).pipe(
           catchAllDie('Failed to find category history'),
+          Effect.catchAll(() => Effect.succeed([])),
         ),
 
       save: (category: Category) =>

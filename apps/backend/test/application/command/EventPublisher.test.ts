@@ -1,11 +1,11 @@
 import { assertEquals, assertExists } from '$std/assert/mod.ts';
+import { Money } from '@shared/schema/Money.ts';
 import { Effect, Layer } from 'effect';
 import { randomUUID } from 'node:crypto';
-import { Money } from '../../../../shared/schema/Money.ts';
 import { EventPublisher } from '../../../src/application/command/EventPublisher.ts';
 import type { WelzEvent } from '../../../src/application/schema/Event.ts';
+import { EventBus } from '../../../src/domain/events/EventBus.ts';
 import { TransactionCreatedEvent } from '../../../src/domain/transaction/events.ts';
-import { EventBus } from '../../../src/shared/events/EventBus.ts';
 
 let publishedEvents: WelzEvent[] = [];
 

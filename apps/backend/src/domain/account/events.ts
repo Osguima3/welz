@@ -1,5 +1,5 @@
+import { Money } from '@shared/schema/Money.ts';
 import { Schema } from 'effect';
-import { Money } from '../../../../shared/schema/Money.ts';
 import { EventMetadata } from '../common/EventMetadata.ts';
 
 export const AccountBalanceUpdatedEvent = Schema.Struct({
