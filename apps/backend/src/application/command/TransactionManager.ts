@@ -3,7 +3,5 @@ import { PostgresClient } from '../../infrastructure/repository/PostgresClient.t
 
 export class TransactionManager extends Context.Tag('TransactionManager')<
   TransactionManager,
-  {
-    <T>(operation: () => Effect.Effect<T, Error, PostgresClient>): Effect.Effect<T, Error>;
-  }
+  <T>(readonly: boolean, operation: () => Effect.Effect<T, Error, PostgresClient>) => Effect.Effect<T, Error>
 >() {}

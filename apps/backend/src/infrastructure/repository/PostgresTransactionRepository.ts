@@ -1,20 +1,24 @@
+import { Currency } from '@shared/schema/Currency.ts';
+import { Money } from '@shared/schema/Money.ts';
+import { Transaction } from '@shared/schema/Transaction.ts';
+import { UUID } from '@shared/schema/UUID.ts';
+import { catchAllDie } from '@shared/utils.ts';
 import { Effect, Layer } from 'effect';
-import { Money } from '../../domain/common/Money.ts';
-import { TransactionAggregate } from '../../domain/transaction/Transaction.ts';
 import { FindTransactionsOptions, TransactionRepository } from '../../domain/transaction/TransactionRepository.ts';
 import { PostgresClient } from './PostgresClient.ts';
+import Page from '@shared/schema/Page.ts';
 
 interface TransactionRow {
-  id: string;
+  id: UUID;
   accountId: string;
-  amount: string;
-  currency: string;
+  amount: number;
+  currency: Currency;
   date: Date;
   description: string;
-  categoryId?: string;
+  categoryId?: UUID;
   createdAt: Date;
   updatedAt: Date;
-  total: string;
+  total: number;
 }
 
 export const PostgresTransactionRepository = Layer.effect(
@@ -23,9 +27,9 @@ export const PostgresTransactionRepository = Layer.effect(
     const client = yield* PostgresClient;
 
     return {
-      findById: (id: string) =>
+      findById: (id: UUID) =>
         Effect.gen(function* () {
-          const result = yield* client.queryObject<TransactionRow>(
+          const result = yield* client.runQuery<TransactionRow>(
             `SELECT
               t.id,
               t.account_id as "accountId",
@@ -47,12 +51,14 @@ export const PostgresTransactionRepository = Layer.effect(
           }
 
           const row = result.rows[0];
-          return TransactionAggregate.make({
+          return Transaction.make({
             ...row,
-            amount: Money.create(Number(row.amount), row.currency),
+            amount: Money.create(row.amount, row.currency),
             categoryId: row.categoryId || undefined,
           });
-        }),
+        }).pipe(
+          catchAllDie('Failed to find transaction'),
+        ),
 
       findTransactions: (options: FindTransactionsOptions) =>
         Effect.gen(function* () {
@@ -71,22 +77,17 @@ export const PostgresTransactionRepository = Layer.effect(
               t.category_id as "categoryId",
               t.created_at as "createdAt",
               t.updated_at as "updatedAt",
-              COUNT(*) OVER() as total
+              COUNT(*) OVER()::INTEGER as total
             FROM transactions t
-            WHERE t.account_id = $1
+            WHERE 1=1
           `;
 
-          const params: unknown[] = [options.accountId];
-          let paramIndex = 2;
+          const params: unknown[] = [];
+          let paramIndex = 1;
 
-          if (options.startDate) {
-            query += ` AND t.date >= $${paramIndex++}`;
-            params.push(options.startDate);
-          }
-
-          if (options.endDate) {
-            query += ` AND t.date <= $${paramIndex++}`;
-            params.push(options.endDate);
+          if (options.accountId) {
+            query += ` AND t.account_id = $${paramIndex++}`;
+            params.push(options.accountId);
           }
 
           if (options.categoryId) {
@@ -94,39 +95,47 @@ export const PostgresTransactionRepository = Layer.effect(
             params.push(options.categoryId);
           }
 
-          query += ` ORDER BY t.date DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
-          params.push(pageSize, offset);
-
-          const result = yield* client.queryObject<TransactionRow>(query, params);
-
-          if (result.rows.length === 0) {
-            return {
-              transactions: [],
-              total: 0,
-              page,
-              pageSize,
-            };
+          if (options.dateRange?.start) {
+            query += ` AND t.date >= $${paramIndex++}`;
+            params.push(options.dateRange.start);
           }
 
-          const transactions = result.rows.map((row) =>
-            TransactionAggregate.make({
+          if (options.dateRange?.end) {
+            query += ` AND t.date <= $${paramIndex++}`;
+            params.push(options.dateRange.end);
+          }
+
+          query += ` ORDER BY t.date DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+          params.push(pageSize, offset);
+
+          const result = yield* client.runQuery<TransactionRow>(query, params);
+
+          if (result.rows.length === 0) {
+            return Page.empty(Transaction, options);
+          }
+
+          const items = result.rows.map((row) =>
+            Transaction.make({
               ...row,
-              amount: Money.create(Number(row.amount), row.currency),
+              amount: Money.create(row.amount, row.currency),
               categoryId: row.categoryId || undefined,
             })
           );
 
           return {
-            transactions,
+            items,
             total: Number(result.rows[0].total),
             page,
             pageSize,
           };
-        }),
+        }).pipe(
+          catchAllDie('Failed to find transactions'),
+          Effect.catchAll(() => Effect.succeed(Page.empty(Transaction, options))),
+        ),
 
-      save: (transaction: TransactionAggregate) =>
+      save: (transaction: Transaction) =>
         Effect.gen(function* () {
-          const result = yield* client.queryObject<TransactionRow>(
+          const result = yield* client.runQuery<TransactionRow>(
             `INSERT INTO transactions (
               id,
               account_id,
@@ -169,12 +178,14 @@ export const PostgresTransactionRepository = Layer.effect(
 
           const row = result.rows[0];
           yield* Effect.log(`Transaction saved: ${JSON.stringify(row)}`);
-          return TransactionAggregate.make({
+          return Transaction.make({
             ...row,
-            amount: Money.create(Number(row.amount), row.currency),
+            amount: Money.create(row.amount, row.currency),
             categoryId: row.categoryId || undefined,
           });
-        }),
+        }).pipe(
+          catchAllDie('Failed to save transaction'),
+        ),
     };
   }),
 );

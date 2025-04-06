@@ -6,7 +6,7 @@ export default class extends AbstractMigration<ClientPostgreSQL> {
       CREATE TABLE transactions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         account_id UUID NOT NULL REFERENCES accounts(id),
-        amount DECIMAL(19,4) NOT NULL,
+        amount DECIMAL(19,2) NOT NULL,
         currency CHAR(3) NOT NULL,
         date DATE NOT NULL,
         description TEXT NOT NULL,
@@ -15,10 +15,14 @@ export default class extends AbstractMigration<ClientPostgreSQL> {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- Index for account balance calculations and filtering
       CREATE INDEX idx_transactions_account ON transactions(account_id);
-      CREATE INDEX idx_transactions_category ON transactions(category_id);
-      CREATE INDEX idx_transactions_date ON transactions(date);
-      CREATE INDEX idx_transactions_currency ON transactions(currency);
+      
+      -- Index for date-based queries and currency filtering
+      CREATE INDEX idx_transactions_date_currency ON transactions(date, currency);
+      
+      -- Index for category spending aggregations
+      CREATE INDEX idx_transactions_category_currency_date ON transactions(category_id, currency, date);
     `);
   }
 

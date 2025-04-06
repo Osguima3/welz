@@ -1,28 +1,28 @@
 import { assertEquals, assertExists } from '$std/assert/mod.ts';
+import { Money } from '@shared/schema/Money.ts';
 import { Effect, Layer } from 'effect';
 import { randomUUID } from 'node:crypto';
 import { EventPublisher } from '../../../src/application/command/EventPublisher.ts';
 import type { WelzEvent } from '../../../src/application/schema/Event.ts';
-import { EventType } from '../../../src/application/schema/Event.ts';
-import { Money } from '../../../src/domain/common/Money.ts';
-import { EventBus } from '../../../src/shared/events/EventBus.ts';
+import { EventBus } from '../../../src/domain/events/EventBus.ts';
+import { TransactionCreatedEvent } from '../../../src/domain/transaction/events.ts';
 
 let publishedEvents: WelzEvent[] = [];
 
-const event = {
-  type: EventType.TRANSACTION_CREATED,
+const event = TransactionCreatedEvent.make({
+  type: 'TransactionCreated',
   metadata: {
     timestamp: new Date(),
     correlationId: randomUUID(),
   },
   payload: {
-    id: '123',
+    id: randomUUID(),
     accountId: randomUUID(),
     amount: Money.create(1000, 'EUR'),
     date: new Date(),
     description: 'Test transaction',
   },
-} satisfies WelzEvent;
+});
 
 const TestEventBus = Layer.succeed(
   EventBus,

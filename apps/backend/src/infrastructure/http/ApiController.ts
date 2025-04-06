@@ -1,8 +1,10 @@
 import { Context, Effect, Layer, Schema } from 'effect';
+import { randomUUID } from 'node:crypto';
 import { CommandRouter } from '../../application/command/CommandRouter.ts';
 import { QueryRouter } from '../../application/query/QueryRouter.ts';
 import { Command } from '../../application/schema/Command.ts';
 import { Query } from '../../application/schema/Query.ts';
+import { AppConfig } from '../config/AppConfig.ts';
 import { WebResponse, WebTransformer } from './WebTransformer.ts';
 
 export class ApiController extends Context.Tag('ApiController')<
@@ -15,18 +17,7 @@ export class ApiController extends Context.Tag('ApiController')<
       const routeCommand = yield* CommandRouter;
       const routeQuery = yield* QueryRouter;
       const webTransformer = yield* WebTransformer;
-
-      function createResponse(webResponse: WebResponse): Effect.Effect<Response> {
-        return Effect.succeed(
-          new Response(
-            webResponse.body,
-            {
-              status: webResponse.status,
-              headers: { 'Content-Type': 'application/json' },
-            },
-          ),
-        );
-      }
+      const config = yield* AppConfig;
 
       function handleCommand(input: unknown): Effect.Effect<WebResponse, Error> {
         return Effect.gen(function* () {
@@ -44,10 +35,23 @@ export class ApiController extends Context.Tag('ApiController')<
         });
       }
 
-      return (req) =>
-        Effect.gen(function* () {
-          const url = new URL(req.url);
-          if (url.pathname !== '/api') {
+      const corsHeaders = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': config.backend.corsOrigin,
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      };
+
+      function createResponse(response: WebResponse): Effect.Effect<Response> {
+        return Effect.succeed(new Response(response.body, { status: response.status, headers: corsHeaders }));
+      }
+
+      return (req) => {
+        const url = new URL(req.url);
+        return Effect.gen(function* () {
+          if (req.method === 'OPTIONS') {
+            return { body: null, status: 204 };
+          } else if (url.pathname !== '/api') {
             return yield* Effect.fail(new Error('Not Found'));
           } else if (req.method === 'POST') {
             const input = yield* Effect.promise(() => req.json());
@@ -60,11 +64,20 @@ export class ApiController extends Context.Tag('ApiController')<
             return yield* Effect.fail(new Error('Method Not Allowed'));
           }
         }).pipe(
-          Effect.scoped,
           Effect.catchAllCause(webTransformer.transformError),
           Effect.flatMap(createResponse),
+          Effect.tap((response) =>
+            Effect.logInfo().pipe(
+              Effect.annotateLogs({
+                request: `${req.method} ${url.pathname}${url.search}`,
+                status: response.status,
+              }),
+            )
+          ),
+          Effect.annotateLogs('spanId', randomUUID()),
           Effect.runPromise,
         );
+      };
     }),
   );
 }

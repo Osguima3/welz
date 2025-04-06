@@ -7,11 +7,11 @@ export default class extends AbstractMigration<ClientPostgreSQL> {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(100) NOT NULL UNIQUE,
         type VARCHAR(20) NOT NULL CHECK (type IN ('INCOME', 'EXPENSE')),
+        color VARCHAR(50) NOT NULL DEFAULT 'gray',
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE INDEX idx_categories_type ON categories(type);
-      CREATE INDEX idx_categories_name ON categories(name);
     `);
   }
 

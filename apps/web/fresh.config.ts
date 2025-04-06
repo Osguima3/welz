@@ -1,9 +1,9 @@
-import { defineConfig } from '$fresh/server.ts';
 import tailwind from '$fresh/plugins/tailwind.ts';
+import { defineConfig } from '$fresh/server.ts';
 
 export default defineConfig({
   plugins: [tailwind()],
   server: {
-    port: 8001,
+    port: parseInt(Deno.env.get('WEB_PORT')!),
   },
 });

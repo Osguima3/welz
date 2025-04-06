@@ -1,6 +1,6 @@
-import { AccountType } from '../account/Account.ts';
-import { CategoryType } from '../category/Category.ts';
-import { Money } from '../common/Money.ts';
+import { AccountType } from '@shared/schema/Account.ts';
+import { CategoryType } from '@shared/schema/Category.ts';
+import { Money } from '@shared/schema/Money.ts';
 
 export interface AccountReadModel {
   accountId: string;
@@ -27,7 +27,7 @@ export interface CategoryReadModel {
   monthlyAverage?: typeof Money.Type;
 }
 
-export interface FinancialInsightsReadModel {
+export interface NetWorthReadModel {
   netWorth: typeof Money.Type;
   topCategories: {
     category: CategoryReadModel;

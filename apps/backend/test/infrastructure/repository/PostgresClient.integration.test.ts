@@ -4,13 +4,15 @@ import { randomUUID } from 'node:crypto';
 import { PostgresClient } from '../../../src/infrastructure/repository/PostgresClient.ts';
 import { IntegrationTestRepositoryLayer } from '../../helper/TestRepositoryLayers.ts';
 
-Deno.test('PostgresClient Integration', async (t) => {
+Deno.test('PostgresClient Integration', {
+  sanitizeResources: false,
+}, async (t) => {
   const client = await PostgresClient.pipe(Effect.provide(IntegrationTestRepositoryLayer), Effect.runPromise);
   const testTableName = 'test_table_' + randomUUID().replace(/-/g, '_');
 
   await t.step('setup', async () => {
     await Effect.runPromise(
-      client.queryArray(`
+      client.runQuery(`
           CREATE TABLE ${testTableName} (
             id UUID PRIMARY KEY,
             name TEXT NOT NULL,
@@ -23,7 +25,7 @@ Deno.test('PostgresClient Integration', async (t) => {
 
   await t.step('should connect to the database', async () => {
     const result = await Effect.runPromise(
-      client.queryObject<{ value: number }>('SELECT 1 as value'),
+      client.runQuery<{ value: number }>('SELECT 1 as value'),
     );
     assertEquals(result.rows.length, 1);
     assertEquals(result.rows[0].value, 1);
@@ -34,7 +36,7 @@ Deno.test('PostgresClient Integration', async (t) => {
     const name = 'Test Record';
 
     const result = await Effect.runPromise(
-      client.queryObject<{ id: string; name: string }>(
+      client.runQuery<{ id: string; name: string }>(
         `INSERT INTO ${testTableName} (id, name) VALUES ($1, $2) RETURNING *`,
         [id, name],
       ),
@@ -54,7 +56,7 @@ Deno.test('PostgresClient Integration', async (t) => {
     // Insert multiple records
     for (const record of records) {
       await Effect.runPromise(
-        client.queryObject(
+        client.runQuery(
           `INSERT INTO ${testTableName} (id, name, amount) VALUES ($1, $2, $3)`,
           [record.id, record.name, record.amount],
         ),
@@ -63,7 +65,7 @@ Deno.test('PostgresClient Integration', async (t) => {
 
     // Update a record
     await Effect.runPromise(
-      client.queryObject(
+      client.runQuery(
         `UPDATE ${testTableName} SET amount = amount * 2 WHERE name = $1`,
         ['Record 1'],
       ),
@@ -71,7 +73,7 @@ Deno.test('PostgresClient Integration', async (t) => {
 
     // Verify update
     const result = await Effect.runPromise(
-      client.queryObject<{ amount: string }>(
+      client.runQuery<{ amount: string }>(
         `SELECT amount FROM ${testTableName} WHERE name = $1`,
         ['Record 1'],
       ),
@@ -84,10 +86,7 @@ Deno.test('PostgresClient Integration', async (t) => {
   await t.step('should handle query errors gracefully', async () => {
     // Test syntax error
     await assertRejects(
-      () =>
-        Effect.runPromise(
-          client.queryArray('SELECT * FROM'),
-        ),
+      () => Effect.runPromise(client.runQuery('SELECT * FROM')),
       Error,
       'syntax error',
     );
@@ -96,7 +95,7 @@ Deno.test('PostgresClient Integration', async (t) => {
     await assertRejects(
       () =>
         Effect.runPromise(
-          client.queryObject(
+          client.runQuery(
             `INSERT INTO ${testTableName} (id, name) VALUES ($1, $2)`,
             [randomUUID(), null],
           ),
@@ -108,7 +107,7 @@ Deno.test('PostgresClient Integration', async (t) => {
     // Test duplicate key violation
     const id = randomUUID();
     await Effect.runPromise(
-      client.queryObject(
+      client.runQuery(
         `INSERT INTO ${testTableName} (id, name) VALUES ($1, $2)`,
         [id, 'Test Duplicate'],
       ),
@@ -117,7 +116,7 @@ Deno.test('PostgresClient Integration', async (t) => {
     await assertRejects(
       () =>
         Effect.runPromise(
-          client.queryObject(
+          client.runQuery(
             `INSERT INTO ${testTableName} (id, name) VALUES ($1, $2)`,
             [id, 'Test Duplicate 2'],
           ),
@@ -134,9 +133,7 @@ Deno.test('PostgresClient Integration', async (t) => {
     );
 
     await Effect.runPromise(
-      client.queryArray(
-        `INSERT INTO ${testTableName} (id, name, amount) VALUES ${values}`,
-      ),
+      client.runQuery(`INSERT INTO ${testTableName} (id, name, amount) VALUES ${values}`),
     );
 
     // Query with pagination
@@ -145,13 +142,11 @@ Deno.test('PostgresClient Integration', async (t) => {
     const offset = (page - 1) * pageSize;
 
     const result = await Effect.runPromise(
-      client.queryObject<{ count: number }>(
-        `SELECT COUNT(*) as count FROM ${testTableName}`,
-      ),
+      client.runQuery<{ count: number }>(`SELECT COUNT(*) as count FROM ${testTableName}`),
     );
 
     const pagedResult = await Effect.runPromise(
-      client.queryObject<{ name: string }>(
+      client.runQuery<{ name: string }>(
         `SELECT name FROM ${testTableName} ORDER BY name LIMIT $1 OFFSET $2`,
         [pageSize, offset],
       ),
@@ -162,7 +157,7 @@ Deno.test('PostgresClient Integration', async (t) => {
   });
 
   await t.step('cleanup', async () => {
-    await Effect.runPromise(client.queryArray(`DROP TABLE IF EXISTS ${testTableName}`));
+    await Effect.runPromise(client.runQuery(`DROP TABLE IF EXISTS ${testTableName}`));
     await Effect.runPromise(client.end());
   });
 });

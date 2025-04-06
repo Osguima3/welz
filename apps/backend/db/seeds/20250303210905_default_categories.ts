@@ -3,35 +3,38 @@ import { AbstractSeed, ClientPostgreSQL, Info } from '$nessie/mod.ts';
 interface CategorySeed {
   name: string;
   type: 'INCOME' | 'EXPENSE';
+  color: string;
 }
 
 const defaultCategories: CategorySeed[] = [
   // Income categories
-  { name: 'Salary', type: 'INCOME' },
-  { name: 'Investments', type: 'INCOME' },
-  { name: 'Other Income', type: 'INCOME' },
+  { name: 'Salary', type: 'INCOME', color: 'green' },
+  { name: 'Investments', type: 'INCOME', color: 'purple' },
+  { name: 'Other Income', type: 'INCOME', color: 'teal' },
 
   // Expense categories
-  { name: 'Food & Dining', type: 'EXPENSE' },
-  { name: 'Transportation', type: 'EXPENSE' },
-  { name: 'Housing', type: 'EXPENSE' },
-  { name: 'Utilities', type: 'EXPENSE' },
-  { name: 'Healthcare', type: 'EXPENSE' },
-  { name: 'Entertainment', type: 'EXPENSE' },
-  { name: 'Shopping', type: 'EXPENSE' },
-  { name: 'Travel', type: 'EXPENSE' },
-  { name: 'Education', type: 'EXPENSE' },
-  { name: 'Personal Care', type: 'EXPENSE' },
-  { name: 'Other Expenses', type: 'EXPENSE' },
+  { name: 'Food & Dining', type: 'EXPENSE', color: 'orange' },
+  { name: 'Transportation', type: 'EXPENSE', color: 'blue' },
+  { name: 'Housing', type: 'EXPENSE', color: 'teal' },
+  { name: 'Utilities', type: 'EXPENSE', color: 'red' },
+  { name: 'Healthcare', type: 'EXPENSE', color: 'cyan' },
+  { name: 'Entertainment', type: 'EXPENSE', color: 'pink' },
+  { name: 'Shopping', type: 'EXPENSE', color: 'purple' },
+  { name: 'Travel', type: 'EXPENSE', color: 'amber' },
+  { name: 'Education', type: 'EXPENSE', color: 'indigo' },
+  { name: 'Personal Care', type: 'EXPENSE', color: 'rose' },
+  { name: 'Other Expenses', type: 'EXPENSE', color: 'gray' },
 ];
 
 export default class extends AbstractSeed<ClientPostgreSQL> {
   async run(_info: Info): Promise<void> {
     for (const category of defaultCategories) {
       await this.client.queryObject`
-        INSERT INTO categories (name, type)
-        VALUES (${category.name}, ${category.type})
-        ON CONFLICT (name) DO NOTHING
+        INSERT INTO categories (name, type, color)
+        VALUES (${category.name}, ${category.type}, ${category.color})
+        ON CONFLICT (name) DO UPDATE SET 
+          type = ${category.type},
+          color = ${category.color}
       `;
     }
   }

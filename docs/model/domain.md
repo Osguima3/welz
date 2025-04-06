@@ -173,7 +173,7 @@ interface GetAccountBalancesQuery {
   currency?: string;
 }
 
-interface GetAccountTransactionsQuery {
+interface GetTransactionsQuery {
   accountId: string;
   dateRange?: DateRange;
   category?: string;

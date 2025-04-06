@@ -1,6 +1,7 @@
 import { AbstractSeed, ClientPostgreSQL, Info } from '$nessie/mod.ts';
-import { AccountType } from '../../src/domain/account/Account.ts';
-import { Money } from '../../src/domain/common/Money.ts';
+import { randomUUID } from 'node:crypto';
+import { AccountType } from '@shared/schema/Account.ts';
+import { Money } from '@shared/schema/Money.ts';
 
 interface AccountSeed {
   id: string;
@@ -17,8 +18,20 @@ const initialAccounts: AccountSeed[] = [
     initialBalance: Money.create(0, 'EUR'),
   },
   {
-    id: 'e4cac45f-66a5-48e1-93a5-17a956432189',
+    id: randomUUID(),
     name: 'Main Bank Account',
+    type: 'BANK',
+    initialBalance: Money.create(0, 'EUR'),
+  },
+  {
+    id: randomUUID(),
+    name: 'Credit Card',
+    type: 'BANK',
+    initialBalance: Money.create(0, 'EUR'),
+  },
+  {
+    id: randomUUID(),
+    name: 'Savings Account',
     type: 'BANK',
     initialBalance: Money.create(0, 'EUR'),
   },

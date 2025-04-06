@@ -17,7 +17,7 @@ export function createTestServer(
 
   return Promise.resolve({
     async fetchResponse(method: 'POST' | 'GET', data: unknown) {
-      const url = new URL(`http://localhost:${port}/api`);
+      const url = new URL(`http://localhost:${server.addr.port}/api`);
       const requestInit: RequestInit = {
         method,
         headers: { 'Content-Type': 'application/json' },

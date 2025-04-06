@@ -1,7 +1,8 @@
+import { Money } from '@shared/schema/Money.ts';
 import { Schema } from 'effect';
 import { EventMetadata } from '../common/EventMetadata.ts';
-import { Money } from '../common/Money.ts';
 
+export type TransactionCreatedEvent = typeof TransactionCreatedEvent.Type;
 export const TransactionCreatedEvent = Schema.Struct({
   type: Schema.Literal('TransactionCreated'),
   metadata: Schema.optional(EventMetadata),
@@ -15,6 +16,7 @@ export const TransactionCreatedEvent = Schema.Struct({
   }),
 });
 
+export type TransactionCategorizedEvent = typeof TransactionCategorizedEvent.Type;
 export const TransactionCategorizedEvent = Schema.Struct({
   type: Schema.Literal('TransactionCategorized'),
   metadata: Schema.optional(EventMetadata),

@@ -1,14 +1,22 @@
 {
   "lock": false,
-  "workspace": ["./apps/backend", "./apps/web"],
+  "workspace": [
+    "./apps/backend",
+    "./apps/web"
+  ],
+  "importMap": "./import_map.json",
   "tasks": {
     "start": "deno task start:backend & deno task start:web",
     "backend:migrate": "deno task -c apps/backend/deno.json migrate",
     "backend:seed": "deno task -c apps/backend/deno.json seed",
     "backend:test": "deno test -A apps/backend",
     "backend:start": "deno task -c apps/backend/deno.json start",
+    "backend:build": "deno task -c apps/backend/deno.json build",
     "web:test": "deno test -A apps/web",
     "web:start": "deno task -c apps/web/deno.json start",
+    "web:build": "deno task -c apps/web/deno.json build",
+    "web:preview": "deno task -c apps/web/deno.json preview",
+    "web:update": "deno run -A -r https://fresh.deno.dev/update .",
     "test": "deno test -A --clean --coverage=coverage && deno task coverage:clean",
     "test:pwsh": "deno test -A --clean --coverage=coverage; deno task coverage:clean",
     "coverage": "deno coverage coverage --lcov --output=coverage/lcov.info",
@@ -23,12 +31,19 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
-    "noImplicitThis": true
+    "noImplicitThis": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"],
-      "include": ["recommended/single-import"]
+      "tags": [
+        "recommended",
+        "fresh"
+      ],
+      "include": [
+        "recommended/single-import"
+      ]
     }
   },
   "fmt": {
@@ -38,6 +53,5 @@
     "indentWidth": 2,
     "useTabs": false,
     "proseWrap": "preserve"
-  },
-  "importMap": "./import_map.json"
+  }
 }

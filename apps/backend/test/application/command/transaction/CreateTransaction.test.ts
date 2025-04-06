@@ -1,10 +1,10 @@
-import { assertEquals, assertExists, assertStringIncludes } from '$std/assert/mod.ts';
-import { Effect, Layer } from 'effect';
+import { assert, assertEquals, assertExists, assertStringIncludes } from '$std/assert/mod.ts';
+import { Effect, Layer, Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
 import { CreateTransaction } from '../../../../src/application/command/transaction/CreateTransaction.ts';
-import { EventType } from '../../../../src/application/schema/Event.ts';
+import { TransactionCreatedEvent } from '../../../../src/domain/transaction/events.ts';
 import { TransactionRepository } from '../../../../src/domain/transaction/TransactionRepository.ts';
-import * as TestCommands from '../../../helper/TestCommands.ts';
+import TestCommands from '../../../helper/TestCommands.ts';
 import { TestEventPublisher } from '../../../helper/TestEventPublisherLayers.ts';
 import { UnitTestLayer } from '../../../helper/TestLayers.ts';
 
@@ -41,8 +41,8 @@ Deno.test('CreateTransaction', async (t) => {
 
     assertEquals(TestEventPublisher.count(), 1, 'Event publisher should be called once');
 
-    const event = TestEventPublisher.popEvent() as { type: EventType };
-    assertEquals(event.type, 'TransactionCreated');
+    const event = TestEventPublisher.popEvent();
+    assert(Schema.is(TransactionCreatedEvent)(event));
   });
 
   await t.step('should fail when event publisher fails', async () => {

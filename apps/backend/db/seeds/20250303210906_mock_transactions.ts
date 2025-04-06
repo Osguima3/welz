@@ -1,6 +1,6 @@
 import { AbstractSeed, ClientPostgreSQL, Info } from '$nessie/mod.ts';
-import { Currency } from '../../src/domain/common/Currency.ts';
-import { Money } from '../../src/domain/common/Money.ts';
+import { Currency } from '@shared/schema/Currency.ts';
+import { Money } from '@shared/schema/Money.ts';
 
 interface MockTransaction {
   accountId: string;
@@ -25,11 +25,30 @@ const mockMerchants = [
   'CVS Pharmacy',
 ];
 
-const mockDescriptionTemplates = [
+const mockIncomeDescriptionTemplates = [
+  'Salary deposit',
+  'Direct deposit - Payroll',
+  'Payment received from {merchant}',
+  'Investment return - {merchant}',
+  'Dividend payment',
+  'Freelance work - {merchant}',
+  'Interest earned',
+  'Refund from {merchant}',
+  'Bonus payment',
+  'Commission payment',
+];
+
+const mockExpenseDescriptionTemplates = [
   'Purchase at {merchant}',
   'Payment to {merchant}',
   'Online order - {merchant}',
   '{merchant} - Monthly subscription',
+  'Service payment - {merchant}',
+  'Shopping at {merchant}',
+  'Bill payment - {merchant}',
+  'Recurring charge - {merchant}',
+  'Transaction fee - {merchant}',
+  'Membership renewal - {merchant}',
 ];
 
 function getRandomElement<T>(array: T[]): T {
@@ -60,18 +79,23 @@ export default class extends AbstractSeed<ClientPostgreSQL> {
 
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 3);
+    startDate.setMonth(startDate.getMonth() - 6);
 
     const transactions: MockTransaction[] = [];
 
     for (const accountId of accountIds) {
       for (let i = 0; i < 50; i++) {
         const merchant = getRandomElement(mockMerchants);
-        const descTemplate = getRandomElement(mockDescriptionTemplates);
-        const description = descTemplate.replace('{merchant}', merchant);
-
         const isExpense = Math.random() < 0.7;
-        const amount = isExpense ? generateRandomMoney(-500, -10) : generateRandomMoney(1000, 5000);
+
+        const amount = isExpense ? generateRandomMoney(-500, 100) : generateRandomMoney(1000, 5000);
+
+        const isRefund = isExpense && amount.amount > 0;
+        const descriptionTemplate = isRefund
+          ? `Refund from {merchant}`
+          : isExpense
+          ? getRandomElement(mockExpenseDescriptionTemplates)
+          : getRandomElement(mockIncomeDescriptionTemplates);
 
         const matchingCategories = categories.filter((c) =>
           (isExpense && c.type === 'EXPENSE') || (!isExpense && c.type === 'INCOME')
@@ -81,7 +105,7 @@ export default class extends AbstractSeed<ClientPostgreSQL> {
           accountId,
           amount: amount.amount,
           currency: amount.currency,
-          description,
+          description: descriptionTemplate.replace('{merchant}', merchant),
           date: generateRandomDate(startDate, endDate),
           categoryId: getRandomElement(matchingCategories)?.id,
         });
